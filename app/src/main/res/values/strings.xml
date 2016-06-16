@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MovieMania</string>
+    <string name="movie_img_desc">Movie Image here</string>
+    <string name="movie_title">Movie Title here</string>
 </resources>
