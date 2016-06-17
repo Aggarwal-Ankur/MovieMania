@@ -6,8 +6,7 @@
     android:layout_height="wrap_content"
     card_view:cardElevation="@dimen/cardview_default_elevation"
     card_view:cardCornerRadius="@dimen/cardview_default_radius"
-    android:padding="@dimen/item_offset"
-    >
+    android:padding="@dimen/item_offset">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -31,7 +30,7 @@
             android:layout_height="wrap_content"
             android:textSize="@dimen/movie_title_text_size"
             android:text="@string/movie_title"
-            android:textColor="#000"
+            android:textColor="@color/black"
             android:gravity="center"
             android:layout_alignParentStart="true"
             android:layout_alignParentBottom="true"/>
