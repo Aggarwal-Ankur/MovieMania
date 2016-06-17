@@ -25,6 +25,8 @@ public class MainActivity extends AppCompatActivity {
         RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
         rView.setHasFixedSize(true);
         rView.setLayoutManager(mGridManager);
+        MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
+        rView.addItemDecoration(itemDecoration);
 
         MainListAdapter rcAdapter = new MainListAdapter(MainActivity.this, rowListItem);
         rView.setAdapter(rcAdapter);
