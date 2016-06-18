@@ -1,7 +1,7 @@
 package com.ankuraggarwal.moviemania;
 
-import android.app.Fragment;
 import android.app.FragmentManager;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -13,12 +13,27 @@ import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
+
 public class MainActivity extends AppCompatActivity {
 
     private GridLayoutManager mGridManager;
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
 
     private MovieFetchFragment mMovieFetchFragment;
+
+
+
+    // These are the parameters to build the URL
+    private static final String URL_SCHEME = "https";
+    private static final String BASE_URL = "api.themoviedb.org";
+
+    private static final String EXTRA_PATH_1 = "3";
+    private static final String EXTRA_PATH_2 = "movie";
+    private static final String POPULAR_PATH = "popular";
+    private static final String TOP_RATED_PATH = "top_rated";
+
+    private static final String API_KEY_PARAMETER = "api_key";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,6 +48,20 @@ public class MainActivity extends AppCompatActivity {
         if (mMovieFetchFragment == null) {
             mMovieFetchFragment = new MovieFetchFragment();
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
+
+            Uri.Builder uriBuilder = new Uri.Builder();
+
+            String url = uriBuilder.scheme(URL_SCHEME)
+                    .authority(BASE_URL)
+                    .appendPath(EXTRA_PATH_1)
+                    .appendPath(EXTRA_PATH_2)
+                    .appendPath(POPULAR_PATH)
+                    .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                    .build().toString();
+
+
+
+            mMovieFetchFragment.fetchDataFromUrl(url);
         }
 
 
@@ -45,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
         MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
         rView.addItemDecoration(itemDecoration);
 
-        MainListAdapter rcAdapter = new MainListAdapter(MainActivity.this, rowListItem);
-        rView.setAdapter(rcAdapter);
+        MainListAdapter mlAdapter = new MainListAdapter(MainActivity.this, rowListItem);
+        rView.setAdapter(mlAdapter);
     }
 
 

@@ -3,6 +3,7 @@ package com.ankuraggarwal.moviemania.fragments;
 import android.app.Fragment;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.Log;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.google.gson.Gson;
@@ -20,6 +21,7 @@ import okhttp3.Response;
 
 public class MovieFetchFragment extends Fragment {
 
+    private static final String TAG = MovieFetchFragment.class.getSimpleName();
 
     private MovieFetchTask mMovieFetchTask;
     @Override
@@ -33,7 +35,7 @@ public class MovieFetchFragment extends Fragment {
         if(mMovieFetchTask != null){
             mMovieFetchTask.cancel(true);
         }
-
+        mMovieFetchTask = new MovieFetchTask();
         mMovieFetchTask.execute(new String[]{url});
     }
 
@@ -47,6 +49,8 @@ public class MovieFetchFragment extends Fragment {
                 return null;
             }
 
+            client = new OkHttpClient();
+
             try {
                 Request request = new Request.Builder()
                         .url(params[0])
@@ -54,6 +58,8 @@ public class MovieFetchFragment extends Fragment {
                 Response response = client.newCall(request).execute();
 
                 String responseJson = response.body().string();
+
+                Log.d(TAG, "response Json = " + responseJson);
 
                 Gson gson = new Gson();
 
