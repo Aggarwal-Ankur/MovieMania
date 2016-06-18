@@ -32,7 +32,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
     @Override
     public void onBindViewHolder(MovieViewHolder holder, int position) {
         holder.mMovieTitle.setText(mItemList.get(position).getMovieTitle());
-        holder.mMovieImg.setImageResource(mItemList.get(position).getImgResource());
+        //holder.mMovieImg.setImageResource(mItemList.get(position).getImgResource());
     }
 
     @Override

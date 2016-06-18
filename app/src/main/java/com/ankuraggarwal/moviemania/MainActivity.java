@@ -65,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
         }
 
 
-        List<MovieDataItem> rowListItem = getDummyData();
+        /*List<MovieDataItem> rowListItem = getDummyData();
         mGridManager = new GridLayoutManager(MainActivity.this, 4);
 
         RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
@@ -75,22 +75,7 @@ public class MainActivity extends AppCompatActivity {
         rView.addItemDecoration(itemDecoration);
 
         MainListAdapter mlAdapter = new MainListAdapter(MainActivity.this, rowListItem);
-        rView.setAdapter(mlAdapter);
+        rView.setAdapter(mlAdapter);*/
     }
 
-
-    private List<MovieDataItem> getDummyData(){
-        List<MovieDataItem> allItems = new ArrayList<MovieDataItem>();
-        allItems.add(new MovieDataItem("United States", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("Canada", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("Germany", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("United States", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("Canada", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("United Kingdom", R.mipmap.ic_launcher));
-        allItems.add(new MovieDataItem("Germany", R.mipmap.ic_launcher));
-
-        return allItems;
-
-    }
 }

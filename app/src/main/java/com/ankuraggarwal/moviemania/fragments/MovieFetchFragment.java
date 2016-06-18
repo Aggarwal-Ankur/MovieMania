@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
+import com.ankuraggarwal.moviemania.data.MovieResults;
 import com.google.gson.Gson;
 
 import java.io.IOException;
@@ -59,9 +60,11 @@ public class MovieFetchFragment extends Fragment {
 
                 String responseJson = response.body().string();
 
-                Log.d(TAG, "response Json = " + responseJson);
-
                 Gson gson = new Gson();
+
+                mMovieList = gson.fromJson(responseJson, MovieResults.class).getResults();
+
+                Log.d(TAG, "response Json = " + responseJson);
 
             } catch (IOException e) {
                 e.printStackTrace();

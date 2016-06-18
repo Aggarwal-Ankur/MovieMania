@@ -1,18 +1,20 @@
 package com.ankuraggarwal.moviemania.data;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 
 /**
  * Created by Ankur on 6/16/2016.
  */
 public class MovieDataItem implements Serializable{
+    @SerializedName("original_title")
     private String mMovieTitle;
-    private int mImgResource;
 
-    public MovieDataItem(String title, int imgResource){
-        this.mMovieTitle = title;
-        this.mImgResource = imgResource;
-    }
+    @SerializedName("poster_path")
+    private String posterPath;
+
+    private String id;
 
     public String getMovieTitle() {
         return mMovieTitle;
@@ -22,11 +24,19 @@ public class MovieDataItem implements Serializable{
         this.mMovieTitle = movieTitle;
     }
 
-    public int getImgResource() {
-        return mImgResource;
+    public String getPosterPath() {
+        return posterPath;
     }
 
-    public void setImgResource(int imgResource) {
-        this.mImgResource = imgResource;
+    public void setPosterPath(String posterPath) {
+        this.posterPath = posterPath;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
