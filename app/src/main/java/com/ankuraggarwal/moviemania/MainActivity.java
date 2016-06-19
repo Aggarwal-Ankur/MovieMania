@@ -1,7 +1,9 @@
 package com.ankuraggarwal.moviemania;
 
 import android.app.FragmentManager;
+import android.app.ProgressDialog;
 import android.net.Uri;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
@@ -15,12 +17,16 @@ import java.util.List;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks{
 
     private GridLayoutManager mGridManager;
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
 
+
+    /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
     private MovieFetchFragment mMovieFetchFragment;
+    private MainListAdapter mlAdapter;
+    private List<MovieDataItem> mDataItems;
 
 
 
@@ -35,6 +41,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String API_KEY_PARAMETER = "api_key";
 
+    private ProgressDialog mDialog;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -42,6 +50,12 @@ public class MainActivity extends AppCompatActivity {
 
         FragmentManager fm = getFragmentManager();
         mMovieFetchFragment = (MovieFetchFragment) fm.findFragmentByTag(TAG_ASYNC_FRAGMENT);
+
+        //Build the dialog
+        mDialog = new ProgressDialog(this);
+        mDialog.setIndeterminate(true);
+        mDialog.setMessage("Fetching Data...");
+
 
         // If the Fragment is non-null, then it is currently being
         // retained across a configuration change.
@@ -59,14 +73,23 @@ public class MainActivity extends AppCompatActivity {
                     .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
                     .build().toString();
 
-
-
             mMovieFetchFragment.fetchDataFromUrl(url);
+
+
+            mDialog.show();
         }
 
 
-        /*List<MovieDataItem> rowListItem = getDummyData();
-        mGridManager = new GridLayoutManager(MainActivity.this, 4);
+
+        mDataItems = new ArrayList<>();
+
+        List<MovieDataItem> alreadyFetchedItems = mMovieFetchFragment.getMovieList();
+
+        if(alreadyFetchedItems != null && !alreadyFetchedItems.isEmpty()){
+            mDataItems.addAll(alreadyFetchedItems);
+        }
+
+        mGridManager = new GridLayoutManager(MainActivity.this, 2);
 
         RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
         rView.setHasFixedSize(true);
@@ -74,8 +97,19 @@ public class MainActivity extends AppCompatActivity {
         MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
         rView.addItemDecoration(itemDecoration);
 
-        MainListAdapter mlAdapter = new MainListAdapter(MainActivity.this, rowListItem);
-        rView.setAdapter(mlAdapter);*/
+        mlAdapter = new MainListAdapter(MainActivity.this, mDataItems);
+        rView.setAdapter(mlAdapter);
     }
 
+    @Override
+    public void onFetchCompleted() {
+        if(mDataItems == null){
+            return;
+        }
+        mDataItems.clear();
+
+        mDataItems.addAll(mMovieFetchFragment.getMovieList());
+        mlAdapter.notifyDataSetChanged();
+        mDialog.dismiss();
+    }
 }

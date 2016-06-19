@@ -1,6 +1,8 @@
 package com.ankuraggarwal.moviemania.fragments;
 
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,9 +24,17 @@ import okhttp3.Response;
 
 public class MovieFetchFragment extends Fragment {
 
+    public interface FetchCallbacks{
+        void onFetchCompleted();
+    }
+
     private static final String TAG = MovieFetchFragment.class.getSimpleName();
 
+    private List<MovieDataItem> mMovieList;
+
     private MovieFetchTask mMovieFetchTask;
+    private FetchCallbacks mCallbackListener;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +42,14 @@ public class MovieFetchFragment extends Fragment {
         this.setRetainInstance(true);
     }
 
-    public void fetchDataFromUrl ( String url){
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+
+        mCallbackListener = (FetchCallbacks) activity;
+    }
+
+    public void fetchDataFromUrl (String url){
         if(mMovieFetchTask != null){
             mMovieFetchTask.cancel(true);
         }
@@ -40,8 +57,12 @@ public class MovieFetchFragment extends Fragment {
         mMovieFetchTask.execute(new String[]{url});
     }
 
+    public List<MovieDataItem> getMovieList(){
+        return mMovieList;
+    }
+
     private class MovieFetchTask extends AsyncTask<String, Void, List<MovieDataItem>>{
-        private List<MovieDataItem> mMovieList;
+
         private OkHttpClient client;
 
         @Override
@@ -75,6 +96,10 @@ public class MovieFetchFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieDataItem> movieDataItems) {
             super.onPostExecute(movieDataItems);
+
+            if(mCallbackListener != null){
+                mCallbackListener.onFetchCompleted();
+            }
         }
     }
 }

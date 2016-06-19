@@ -4,5 +4,6 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="item_offset">2dp</dimen>
     <dimen name="movie_title_text_size">14sp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
 
 </resources>
