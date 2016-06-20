@@ -8,10 +8,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
+import com.ankuraggarwal.moviemania.data.MovieResults;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
+import com.google.gson.Gson;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +45,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     private static final String API_KEY_PARAMETER = "api_key";
 
+
+    private static final String MOVIE_LIST_KEY = "movie_list";
+
     private ProgressDialog mDialog;
+
+    private String mSavedListJson;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +64,6 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog = new ProgressDialog(this);
         mDialog.setIndeterminate(true);
         mDialog.setMessage("Fetching Data...");
-
 
         // If the Fragment is non-null, then it is currently being
         // retained across a configuration change.
@@ -87,6 +94,20 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         if(alreadyFetchedItems != null && !alreadyFetchedItems.isEmpty()){
             mDataItems.addAll(alreadyFetchedItems);
+        }else{
+            //Check if data is available in the saved instance
+            if(savedInstanceState != null){
+                String listJson = savedInstanceState.getString(MOVIE_LIST_KEY);
+
+                if(listJson != null){
+                    mSavedListJson = listJson;
+                    Gson gson = new Gson();
+
+                    alreadyFetchedItems = gson.fromJson(listJson, MovieResults.class).getResults();
+
+                    mDataItems.addAll(alreadyFetchedItems);
+                }
+            }
         }
 
         mGridManager = new GridLayoutManager(MainActivity.this, 2);
@@ -101,14 +122,26 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         rView.setAdapter(mlAdapter);
     }
 
+    /**
+     * This is used to save the already fetched JSON in the bundle, so that it could be quickly retrieved if activity gets destroyed
+     * @param outState
+     */
     @Override
-    public void onListFetchCompleted() {
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putString(MOVIE_LIST_KEY, mSavedListJson);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onListFetchCompleted(List<MovieDataItem> movieDataItems) {
         if(mDataItems == null){
             return;
         }
         mDataItems.clear();
 
-        mDataItems.addAll(mMovieFetchFragment.getMovieList());
+        mSavedListJson = mMovieFetchFragment.getListJson();
+
+        mDataItems.addAll(movieDataItems);
         mlAdapter.notifyDataSetChanged();
         mDialog.dismiss();
     }

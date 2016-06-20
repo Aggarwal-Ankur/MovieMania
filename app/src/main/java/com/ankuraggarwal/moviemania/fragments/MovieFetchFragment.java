@@ -25,7 +25,7 @@ import okhttp3.Response;
 public class MovieFetchFragment extends Fragment {
 
     public interface FetchCallbacks{
-        void onListFetchCompleted();
+        void onListFetchCompleted(List<MovieDataItem> movieDataItems);
         void onDetailsFetchCompleted(MovieDetailsItem movieDetails);
     }
 
@@ -36,6 +36,8 @@ public class MovieFetchFragment extends Fragment {
     private MovieListFetchTask mMovieListFetchTask;
     private MovieDetailsFetchTask mMovieDetailsFetchTask;
     private FetchCallbacks mCallbackListener;
+
+    private String listJson ;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,6 +69,10 @@ public class MovieFetchFragment extends Fragment {
         mMovieDetailsFetchTask.execute(new String[]{url});
     }
 
+    public String getListJson(){
+        return listJson;
+    }
+
     public List<MovieDataItem> getMovieList(){
         return mMovieList;
     }
@@ -91,6 +97,8 @@ public class MovieFetchFragment extends Fragment {
 
                 String responseJson = response.body().string();
 
+                listJson = responseJson;
+
                 Gson gson = new Gson();
 
                 mMovieList = gson.fromJson(responseJson, MovieResults.class).getResults();
@@ -114,7 +122,7 @@ public class MovieFetchFragment extends Fragment {
             }
 
             if(mCallbackListener != null){
-                mCallbackListener.onListFetchCompleted();
+                mCallbackListener.onListFetchCompleted(movieDataItems);
             }
         }
     }
