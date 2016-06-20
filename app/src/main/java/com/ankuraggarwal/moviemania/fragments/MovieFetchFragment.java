@@ -2,12 +2,12 @@ package com.ankuraggarwal.moviemania.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
-import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
+import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
 import com.ankuraggarwal.moviemania.data.MovieResults;
 import com.google.gson.Gson;
 
@@ -25,14 +25,16 @@ import okhttp3.Response;
 public class MovieFetchFragment extends Fragment {
 
     public interface FetchCallbacks{
-        void onFetchCompleted();
+        void onListFetchCompleted();
+        void onDetailsFetchCompleted(MovieDetailsItem movieDetails);
     }
 
     private static final String TAG = MovieFetchFragment.class.getSimpleName();
 
     private List<MovieDataItem> mMovieList;
 
-    private MovieFetchTask mMovieFetchTask;
+    private MovieListFetchTask mMovieListFetchTask;
+    private MovieDetailsFetchTask mMovieDetailsFetchTask;
     private FetchCallbacks mCallbackListener;
 
     @Override
@@ -49,19 +51,27 @@ public class MovieFetchFragment extends Fragment {
         mCallbackListener = (FetchCallbacks) activity;
     }
 
-    public void fetchDataFromUrl (String url){
-        if(mMovieFetchTask != null){
-            mMovieFetchTask.cancel(true);
+    public void fetchListFromUrl(String url){
+        if(mMovieListFetchTask != null){
+            mMovieListFetchTask.cancel(true);
         }
-        mMovieFetchTask = new MovieFetchTask();
-        mMovieFetchTask.execute(new String[]{url});
+        mMovieListFetchTask = new MovieListFetchTask();
+        mMovieListFetchTask.execute(new String[]{url});
+    }
+
+    public void fetchMovieDetailsFromUrl(String url){
+        if(mMovieDetailsFetchTask != null){
+            mMovieDetailsFetchTask.cancel(true);
+        }
+        mMovieDetailsFetchTask = new MovieDetailsFetchTask();
+        mMovieDetailsFetchTask.execute(new String[]{url});
     }
 
     public List<MovieDataItem> getMovieList(){
         return mMovieList;
     }
 
-    private class MovieFetchTask extends AsyncTask<String, Void, List<MovieDataItem>>{
+    private class MovieListFetchTask extends AsyncTask<String, Void, List<MovieDataItem>>{
 
         private OkHttpClient client;
 
@@ -85,7 +95,9 @@ public class MovieFetchFragment extends Fragment {
 
                 mMovieList = gson.fromJson(responseJson, MovieResults.class).getResults();
 
-                Log.d(TAG, "response Json = " + responseJson);
+                Log.d(TAG, "List Json = " + responseJson);
+
+                return mMovieList;
 
             } catch (IOException e) {
                 e.printStackTrace();
@@ -97,8 +109,60 @@ public class MovieFetchFragment extends Fragment {
         protected void onPostExecute(List<MovieDataItem> movieDataItems) {
             super.onPostExecute(movieDataItems);
 
+            if(isCancelled()){
+                return;
+            }
+
             if(mCallbackListener != null){
-                mCallbackListener.onFetchCompleted();
+                mCallbackListener.onListFetchCompleted();
+            }
+        }
+    }
+
+    private class MovieDetailsFetchTask extends AsyncTask<String, Void, MovieDetailsItem>{
+
+        private OkHttpClient client;
+
+        @Override
+        protected MovieDetailsItem doInBackground(String... params) {
+            if(params == null || params[0] == null || params[0].isEmpty()){
+                return null;
+            }
+
+            client = new OkHttpClient();
+
+            try {
+                Request request = new Request.Builder()
+                        .url(params[0])
+                        .build();
+                Response response = client.newCall(request).execute();
+
+                String responseJson = response.body().string();
+
+                Gson gson = new Gson();
+
+                MovieDetailsItem mMovieDetails = gson.fromJson(responseJson, MovieDetailsItem.class);
+
+                Log.d(TAG, "Details Json = " + responseJson);
+
+                return mMovieDetails;
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(MovieDetailsItem movieDetailsItem) {
+            super.onPostExecute(movieDetailsItem);
+
+            if(isCancelled()){
+                return;
+            }
+
+            if(mCallbackListener != null){
+                mCallbackListener.onDetailsFetchCompleted(movieDetailsItem);
             }
         }
     }

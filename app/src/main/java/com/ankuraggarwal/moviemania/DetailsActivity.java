@@ -6,8 +6,21 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
+
+import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
+import com.squareup.picasso.Picasso;
 
 public class DetailsActivity extends AppCompatActivity {
+
+    public static final String KEY_MOVIE_DETAILS = "movie_details";
+
+    private ImageView mPosterImage;
+
+    private TextView mSynopsisTv, mRatingTextView, mReleaseDateTextView;
+
+    private static final String IMAGE_FETCH_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -17,6 +30,25 @@ public class DetailsActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+
+        mPosterImage = (ImageView) findViewById(R.id.imageView);
+        mSynopsisTv = (TextView) findViewById(R.id.synopsis);
+        mRatingTextView = (TextView) findViewById(R.id.rating);
+        mReleaseDateTextView = (TextView) findViewById(R.id.release_date);
+
+
+        MovieDetailsItem movieDetails = getIntent().getParcelableExtra(KEY_MOVIE_DETAILS);
+
+        if(movieDetails != null){
+            setTitle(movieDetails.getTitle());
+
+            mSynopsisTv.setText(movieDetails.getOverview());
+            mRatingTextView.setText(getResources().getString(R.string.details_user_rating)+ " : "+ movieDetails.getVoteAverage());
+            mReleaseDateTextView.setText(getResources().getString(R.string.release_date)+ " : "+ movieDetails.getReleaseDate());
+
+            Picasso.with(this).load(IMAGE_FETCH_BASE_URL+ movieDetails.getPosterPath()).into(mPosterImage);
+        }
     }
 
 }

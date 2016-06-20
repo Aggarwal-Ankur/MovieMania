@@ -2,14 +2,15 @@ package com.ankuraggarwal.moviemania;
 
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.net.Uri;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
+import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
 
 import java.util.ArrayList;
@@ -17,7 +18,7 @@ import java.util.List;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
-public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks{
+public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks, MainListAdapter.ListItemClickCallback{
 
     private GridLayoutManager mGridManager;
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
@@ -73,8 +74,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                     .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
                     .build().toString();
 
-            mMovieFetchFragment.fetchDataFromUrl(url);
-
+            mMovieFetchFragment.fetchListFromUrl(url);
 
             mDialog.show();
         }
@@ -97,12 +97,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
         rView.addItemDecoration(itemDecoration);
 
-        mlAdapter = new MainListAdapter(MainActivity.this, mDataItems);
+        mlAdapter = new MainListAdapter(MainActivity.this, mDataItems, this);
         rView.setAdapter(mlAdapter);
     }
 
     @Override
-    public void onFetchCompleted() {
+    public void onListFetchCompleted() {
         if(mDataItems == null){
             return;
         }
@@ -111,5 +111,29 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDataItems.addAll(mMovieFetchFragment.getMovieList());
         mlAdapter.notifyDataSetChanged();
         mDialog.dismiss();
+    }
+
+    @Override
+    public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
+        Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
+        detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
+        startActivity(detailsIntent);
+        mDialog.dismiss();
+    }
+
+    @Override
+    public void onListItemClicked(String movieId) {
+        mDialog.show();
+        Uri.Builder uriBuilder = new Uri.Builder();
+
+        String url = uriBuilder.scheme(URL_SCHEME)
+                .authority(BASE_URL)
+                .appendPath(EXTRA_PATH_1)
+                .appendPath(EXTRA_PATH_2)
+                .appendPath(movieId)
+                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                .build().toString();
+
+        mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
     }
 }

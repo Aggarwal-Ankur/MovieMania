@@ -15,7 +15,7 @@
         <ImageView
             android:id="@+id/movie_img"
             android:layout_width="match_parent"
-            android:layout_height="250dp"
+            android:layout_height="@dimen/list_image_height"
             android:contentDescription="@string/movie_img_desc"
             android:src="@mipmap/ic_launcher"
             android:scaleType="centerCrop" />

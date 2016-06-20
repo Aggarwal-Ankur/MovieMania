@@ -3,4 +3,7 @@
     <string name="movie_img_desc">Movie Image here</string>
     <string name="movie_title">Movie Title here</string>
     <string name="title_activity_details">DetailsActivity</string>
+
+    <string name="details_user_rating">Audience Rating</string>
+    <string name="release_date">Released On</string>
 </resources>

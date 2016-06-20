@@ -15,15 +15,20 @@ import java.util.List;
  * Created by Ankur on 6/16/2016.
  */
 public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
+    public interface ListItemClickCallback{
+        void onListItemClicked(String movieId);
+    }
 
     private Context context;
     private List<MovieDataItem> mItemList;
+    private ListItemClickCallback mListItemClickCallback;
 
     private static final String IMAGE_FETCH_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
-    public MainListAdapter(Context context, List<MovieDataItem> itemList) {
+    public MainListAdapter(Context context, List<MovieDataItem> itemList, ListItemClickCallback listItemClickCallback) {
         this.mItemList = itemList;
         this.context = context;
+        this.mListItemClickCallback = listItemClickCallback;
     }
 
     @Override
@@ -45,9 +50,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
             public void onClick(View view) {
                 String movieId = currentItem.getId();
 
-                Intent detailsIntent = new Intent(context, DetailsActivity.class);
-
-                context.startActivity(detailsIntent);
+                mListItemClickCallback.onListItemClicked(movieId);
             }
         });
     }
