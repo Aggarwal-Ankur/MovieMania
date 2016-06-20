@@ -2,7 +2,9 @@ package com.ankuraggarwal.moviemania;
 
 import android.app.FragmentManager;
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -27,17 +29,8 @@ import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
 public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks, MainListAdapter.ListItemClickCallback{
 
-    private GridLayoutManager mGridManager;
+
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
-
-
-    /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
-    private MovieFetchFragment mMovieFetchFragment;
-    private MainListAdapter mlAdapter;
-    private List<MovieDataItem> mDataItems;
-
-
-
     // These are the parameters to build the URL
     private static final String URL_SCHEME = "https";
     private static final String BASE_URL = "api.themoviedb.org";
@@ -49,12 +42,29 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     private static final String API_KEY_PARAMETER = "api_key";
 
+    //Constants for Shared Preferenced
+    private static final int POPULAR_MOVIES_PREF = 1;
+    private static final int TOP_RATED_MOVIES_PREF = 2;
+
+    //Constants for Layouts
+    private static final int GRID_SPAN = 2;
+
+
+    /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
+    private MovieFetchFragment mMovieFetchFragment;
+    private MainListAdapter mlAdapter;
+    private List<MovieDataItem> mDataItems;
+
+
 
     private static final String MOVIE_LIST_KEY = "movie_list";
 
     private ProgressDialog mDialog;
-
+    private GridLayoutManager mGridManager;
     private String mSavedListJson;
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,7 +85,16 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             mMovieFetchFragment = new MovieFetchFragment();
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
 
-            fetchPopularMovies();
+            SharedPreferences sharedPref = this.getSharedPreferences(
+                    getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+            int listType = sharedPref.getInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
+
+            if(listType == TOP_RATED_MOVIES_PREF){
+                fetchTopRatedMovies();
+            }else {
+                fetchPopularMovies();
+            }
         }
 
 
@@ -102,7 +121,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             }
         }
 
-        mGridManager = new GridLayoutManager(MainActivity.this, 2);
+        mGridManager = new GridLayoutManager(MainActivity.this, GRID_SPAN);
 
         RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
         rView.setHasFixedSize(true);
@@ -123,13 +142,22 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPref = MainActivity.this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+
         switch (item.getItemId()){
             case R.id.action_popular:
                 fetchPopularMovies();
+                editor.putInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
+                editor.commit();
                 return true;
 
             case R.id.action_top_rated:
                 fetchTopRatedMovies();
+                editor.putInt(getString(R.string.list_type_preference), TOP_RATED_MOVIES_PREF);
+                editor.commit();
                 return true;
 
             default:
