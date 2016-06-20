@@ -4,11 +4,15 @@ import android.app.FragmentManager;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.net.Uri;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
@@ -71,19 +75,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             mMovieFetchFragment = new MovieFetchFragment();
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
 
-            Uri.Builder uriBuilder = new Uri.Builder();
-
-            String url = uriBuilder.scheme(URL_SCHEME)
-                    .authority(BASE_URL)
-                    .appendPath(EXTRA_PATH_1)
-                    .appendPath(EXTRA_PATH_2)
-                    .appendPath(POPULAR_PATH)
-                    .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
-                    .build().toString();
-
-            mMovieFetchFragment.fetchListFromUrl(url);
-
-            mDialog.show();
+            fetchPopularMovies();
         }
 
 
@@ -122,6 +114,31 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         rView.setAdapter(mlAdapter);
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.main_menu, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()){
+            case R.id.action_popular:
+                fetchPopularMovies();
+                return true;
+
+            case R.id.action_top_rated:
+                fetchTopRatedMovies();
+                return true;
+
+            default:
+
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
+
     /**
      * This is used to save the already fetched JSON in the bundle, so that it could be quickly retrieved if activity gets destroyed
      * @param outState
@@ -141,7 +158,13 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         mSavedListJson = mMovieFetchFragment.getListJson();
 
-        mDataItems.addAll(movieDataItems);
+        //Error handling
+        if(movieDataItems != null){
+            mDataItems.addAll(movieDataItems);
+        }else{
+            Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
+        }
+
         mlAdapter.notifyDataSetChanged();
         mDialog.dismiss();
     }
@@ -168,5 +191,37 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                 .build().toString();
 
         mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
+    }
+
+    private void fetchPopularMovies(){
+        Uri.Builder uriBuilder = new Uri.Builder();
+
+        String url = uriBuilder.scheme(URL_SCHEME)
+                .authority(BASE_URL)
+                .appendPath(EXTRA_PATH_1)
+                .appendPath(EXTRA_PATH_2)
+                .appendPath(POPULAR_PATH)
+                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                .build().toString();
+
+        mMovieFetchFragment.fetchListFromUrl(url);
+
+        mDialog.show();
+    }
+
+    private void fetchTopRatedMovies(){
+        Uri.Builder uriBuilder = new Uri.Builder();
+
+        String url = uriBuilder.scheme(URL_SCHEME)
+                .authority(BASE_URL)
+                .appendPath(EXTRA_PATH_1)
+                .appendPath(EXTRA_PATH_2)
+                .appendPath(TOP_RATED_PATH)
+                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                .build().toString();
+
+        mMovieFetchFragment.fetchListFromUrl(url);
+
+        mDialog.show();
     }
 }
