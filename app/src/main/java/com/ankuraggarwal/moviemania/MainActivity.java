@@ -221,6 +221,9 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
     }
 
+    /**
+     * Utility function to fetch popular movies
+     */
     private void fetchPopularMovies(){
         Uri.Builder uriBuilder = new Uri.Builder();
 
@@ -237,6 +240,9 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog.show();
     }
 
+    /**
+     * Utility function to fetch Top rated movies
+     */
     private void fetchTopRatedMovies(){
         Uri.Builder uriBuilder = new Uri.Builder();
 
