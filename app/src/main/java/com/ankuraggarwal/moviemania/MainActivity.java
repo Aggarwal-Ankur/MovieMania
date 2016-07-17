@@ -121,11 +121,11 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             }
         }
 
-        mGridManager = new GridLayoutManager(MainActivity.this, GRID_SPAN);
+        //mGridManager = new GridLayoutManager(MainActivity.this, GRID_SPAN);
 
         RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
         rView.setHasFixedSize(true);
-        rView.setLayoutManager(mGridManager);
+        //rView.setLayoutManager(mGridManager);
         MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
         rView.addItemDecoration(itemDecoration);
 
@@ -199,6 +199,11 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     @Override
     public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
+        if(movieDetails == null){
+            //Some error occurred
+            //TODO
+
+        }
         Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
         detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
         startActivity(detailsIntent);

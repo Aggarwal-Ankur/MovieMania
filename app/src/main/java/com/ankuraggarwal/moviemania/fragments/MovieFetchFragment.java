@@ -145,6 +145,10 @@ public class MovieFetchFragment extends Fragment {
                         .build();
                 Response response = client.newCall(request).execute();
 
+                if(response.code() != 200){
+                    return null;
+                }
+
                 String responseJson = response.body().string();
 
                 Gson gson = new Gson();
