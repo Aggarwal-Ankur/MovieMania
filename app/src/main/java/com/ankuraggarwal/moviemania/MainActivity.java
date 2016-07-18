@@ -46,9 +46,6 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private static final int POPULAR_MOVIES_PREF = 1;
     private static final int TOP_RATED_MOVIES_PREF = 2;
 
-    //Constants for Layouts
-    private static final int GRID_SPAN = 2;
-
 
     /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
     private MovieFetchFragment mMovieFetchFragment;
@@ -60,7 +57,6 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private static final String MOVIE_LIST_KEY = "movie_list";
 
     private ProgressDialog mDialog;
-    private GridLayoutManager mGridManager;
     private String mSavedListJson;
 
 
