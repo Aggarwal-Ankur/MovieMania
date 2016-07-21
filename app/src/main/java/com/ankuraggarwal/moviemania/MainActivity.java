@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     private static final String API_KEY_PARAMETER = "api_key";
 
-    //Constants for Shared Preferenced
+    //Constants for Shared Preferences
     private static final int POPULAR_MOVIES_PREF = 1;
     private static final int TOP_RATED_MOVIES_PREF = 2;
 

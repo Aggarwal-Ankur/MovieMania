@@ -9,18 +9,15 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
+import com.ankuraggarwal.moviemania.fragments.DetailsFragment;
 import com.squareup.picasso.Picasso;
 
 public class DetailsActivity extends AppCompatActivity {
 
     public static final String KEY_MOVIE_DETAILS = "movie_details";
 
-    private ImageView mPosterImage;
-
-    private TextView mSynopsisTv, mRatingTextView, mReleaseDateTextView;
-
-    private static final String IMAGE_FETCH_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,16 +28,16 @@ public class DetailsActivity extends AppCompatActivity {
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-
-        mPosterImage = (ImageView) findViewById(R.id.imageView);
-        mSynopsisTv = (TextView) findViewById(R.id.synopsis);
-        mRatingTextView = (TextView) findViewById(R.id.rating);
-        mReleaseDateTextView = (TextView) findViewById(R.id.release_date);
-
-
         MovieDetailsItem movieDetails = getIntent().getParcelableExtra(KEY_MOVIE_DETAILS);
 
+        Bundle bundle = new Bundle();
+        bundle.putParcelable(KEY_MOVIE_DETAILS, movieDetails);
+        DetailsFragment fragobj = new DetailsFragment();
+        fragobj.setArguments(bundle);
 
+        getSupportFragmentManager().beginTransaction()
+                .add(R.id.details_container, fragobj)
+                .commit();
     }
 
 }

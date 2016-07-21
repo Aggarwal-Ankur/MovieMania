@@ -10,6 +10,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.ankuraggarwal.moviemania.DetailsActivity;
 import com.ankuraggarwal.moviemania.R;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
 import com.squareup.picasso.Picasso;
@@ -23,9 +24,6 @@ import com.squareup.picasso.Picasso;
  * create an instance of this fragment.
  */
 public class DetailsFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String KEY_MOVIE_DETAILS = "movie_details";
 
     private ImageView mPosterImage;
 
@@ -41,32 +39,19 @@ public class DetailsFragment extends Fragment {
         // Required empty public constructor
     }
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param movieDetails Movie details to display.
-     * @return A new instance of fragment DetailsFragment.
-     */
-    public static DetailsFragment newInstance(MovieDetailsItem movieDetails) {
-        DetailsFragment fragment = new DetailsFragment();
-        Bundle args = new Bundle();
-        args.putParcelable(KEY_MOVIE_DETAILS, movieDetails);
-        fragment.setArguments(args);
-        return fragment;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mMovieDetails = getArguments().getParcelable(KEY_MOVIE_DETAILS);
-        }
+
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        if (getArguments() != null) {
+            mMovieDetails = getArguments().getParcelable(DetailsActivity.KEY_MOVIE_DETAILS);
+        }
         // Inflate the layout for this fragment
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.content_details, container, false);
         mPosterImage = (ImageView) rootView.findViewById(R.id.imageView);
@@ -96,12 +81,12 @@ public class DetailsFragment extends Fragment {
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
-        if (context instanceof OnFavoritesSelectedListener) {
+        /*if (context instanceof OnFavoritesSelectedListener) {
             mListener = (OnFavoritesSelectedListener) context;
         } else {
             throw new RuntimeException(context.toString()
                     + " must implement OnFavoritesSelectedListener");
-        }
+        }*/
     }
 
     @Override
