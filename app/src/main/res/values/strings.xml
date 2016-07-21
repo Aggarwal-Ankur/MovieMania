@@ -10,8 +10,6 @@
     <string name="release_date">Released On</string>
 
 
-
-
     <!-- Menu Items-->
     <string name="see_popular">See Popular Movies</string>
     <string name="see_top_rated">See Top Rated Movies</string>
@@ -19,4 +17,7 @@
 
     <!-- Error Messages-->
     <string name="error_connectivity">Oops! Could not fetch data. Check your internet connection...</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

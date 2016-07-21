@@ -6,8 +6,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginTop="?attr/actionBarSize"
-    tools:context="com.ankuraggarwal.moviemania.DetailsActivity"
-    tools:showIn="@layout/activity_details"
     android:orientation="vertical"
     android:weightSum="2">
 

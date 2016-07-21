@@ -40,15 +40,7 @@ public class DetailsActivity extends AppCompatActivity {
 
         MovieDetailsItem movieDetails = getIntent().getParcelableExtra(KEY_MOVIE_DETAILS);
 
-        if(movieDetails != null){
-            setTitle(movieDetails.getTitle());
 
-            mSynopsisTv.setText(movieDetails.getOverview());
-            mRatingTextView.setText(getResources().getString(R.string.details_user_rating)+ " : "+ movieDetails.getVoteAverage());
-            mReleaseDateTextView.setText(getResources().getString(R.string.release_date)+ " : "+ movieDetails.getReleaseDate());
-
-            Picasso.with(this).load(IMAGE_FETCH_BASE_URL+ movieDetails.getPosterPath()).into(mPosterImage);
-        }
     }
 
 }
