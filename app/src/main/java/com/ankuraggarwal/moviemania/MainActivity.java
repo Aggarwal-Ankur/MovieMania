@@ -27,7 +27,7 @@ import java.util.List;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
-public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks, MainListAdapter.ListItemClickCallback{
+public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks{
 
 
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
     /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
     private MovieFetchFragment mMovieFetchFragment;
-    private MainListAdapter mlAdapter;
+
     private List<MovieDataItem> mDataItems;
 
 
@@ -119,14 +119,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         //mGridManager = new GridLayoutManager(MainActivity.this, GRID_SPAN);
 
-        RecyclerView rView = (RecyclerView)findViewById(R.id.movie_recycler_view);
-        rView.setHasFixedSize(true);
-        //rView.setLayoutManager(mGridManager);
-        MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(this, R.dimen.item_offset);
-        rView.addItemDecoration(itemDecoration);
 
-        mlAdapter = new MainListAdapter(MainActivity.this, mDataItems, this);
-        rView.setAdapter(mlAdapter);
     }
 
     @Override
