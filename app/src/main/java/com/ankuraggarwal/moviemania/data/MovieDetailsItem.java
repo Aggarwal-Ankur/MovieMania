@@ -10,6 +10,8 @@ import com.google.gson.annotations.SerializedName;
  */
 
 public class MovieDetailsItem implements Parcelable{
+    private String id;
+
     private String title;
 
     @SerializedName("release_date")
@@ -96,4 +98,8 @@ public class MovieDetailsItem implements Parcelable{
             return new MovieDetailsItem[size];
         }
     };
+
+    public String getId() {
+        return id;
+    }
 }

@@ -33,16 +33,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
 
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
-    // These are the parameters to build the URL
-    private static final String URL_SCHEME = "https";
-    private static final String BASE_URL = "api.themoviedb.org";
 
-    private static final String EXTRA_PATH_1 = "3";
-    private static final String EXTRA_PATH_2 = "movie";
-    private static final String POPULAR_PATH = "popular";
-    private static final String TOP_RATED_PATH = "top_rated";
-
-    private static final String API_KEY_PARAMETER = "api_key";
 
     //Constants for Shared Preferences
     private static final int POPULAR_MOVIES_PREF = 1;
@@ -256,12 +247,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog.show();
         Uri.Builder uriBuilder = new Uri.Builder();
 
-        String url = uriBuilder.scheme(URL_SCHEME)
-                .authority(BASE_URL)
-                .appendPath(EXTRA_PATH_1)
-                .appendPath(EXTRA_PATH_2)
+        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                .authority(IConstants.BASE_URL)
+                .appendPath(IConstants.EXTRA_PATH_1)
+                .appendPath(IConstants.EXTRA_PATH_2)
                 .appendPath(movieId)
-                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
                 .build().toString();
 
         mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
@@ -273,12 +264,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private void fetchPopularMovies(){
         Uri.Builder uriBuilder = new Uri.Builder();
 
-        String url = uriBuilder.scheme(URL_SCHEME)
-                .authority(BASE_URL)
-                .appendPath(EXTRA_PATH_1)
-                .appendPath(EXTRA_PATH_2)
-                .appendPath(POPULAR_PATH)
-                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                .authority(IConstants.BASE_URL)
+                .appendPath(IConstants.EXTRA_PATH_1)
+                .appendPath(IConstants.EXTRA_PATH_2)
+                .appendPath(IConstants.POPULAR_PATH)
+                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
                 .build().toString();
 
         mMovieFetchFragment.fetchListFromUrl(url);
@@ -292,12 +283,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private void fetchTopRatedMovies(){
         Uri.Builder uriBuilder = new Uri.Builder();
 
-        String url = uriBuilder.scheme(URL_SCHEME)
-                .authority(BASE_URL)
-                .appendPath(EXTRA_PATH_1)
-                .appendPath(EXTRA_PATH_2)
-                .appendPath(TOP_RATED_PATH)
-                .appendQueryParameter(API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                .authority(IConstants.BASE_URL)
+                .appendPath(IConstants.EXTRA_PATH_1)
+                .appendPath(IConstants.EXTRA_PATH_2)
+                .appendPath(IConstants.TOP_RATED_PATH)
+                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
                 .build().toString();
 
         mMovieFetchFragment.fetchListFromUrl(url);
