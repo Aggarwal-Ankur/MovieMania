@@ -19,6 +19,8 @@ import android.view.MenuItem;
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
 import com.ankuraggarwal.moviemania.data.MovieResults;
+import com.ankuraggarwal.moviemania.fragments.DetailsFragment;
+import com.ankuraggarwal.moviemania.fragments.MainFragment;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
 import com.google.gson.Gson;
 
@@ -27,7 +29,7 @@ import java.util.List;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
-public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks{
+public class MainActivity extends AppCompatActivity implements MovieFetchFragment.FetchCallbacks, MainFragment.OnMovieSelectedListener{
 
 
     private static final String TAG_ASYNC_FRAGMENT = "async_fragment";
@@ -55,17 +57,35 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
 
     private static final String MOVIE_LIST_KEY = "movie_list";
+    private static final String SELECTED_MOVIE_KEY = "selected_movie";
 
     private ProgressDialog mDialog;
     private String mSavedListJson;
 
 
+    private boolean dualPane = false;
+
+    private DetailsFragment detailsFragment;
+    private MainFragment mainFragment;
+
+    private MovieDetailsItem mSelectedMovie;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Check if the layout is dual pane or single pane
+        detailsFragment = (DetailsFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);
+
+        if(detailsFragment != null){
+            dualPane = true;
+        }else{
+            dualPane = false;
+        }
+
+        mainFragment = (MainFragment) getSupportFragmentManager().findFragmentById(R.id.main_fragment);
 
         FragmentManager fm = getFragmentManager();
         mMovieFetchFragment = (MovieFetchFragment) fm.findFragmentByTag(TAG_ASYNC_FRAGMENT);
@@ -101,6 +121,18 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         if(alreadyFetchedItems != null && !alreadyFetchedItems.isEmpty()){
             mDataItems.addAll(alreadyFetchedItems);
+
+            mainFragment.updateMovieList(mDataItems);
+
+            if(savedInstanceState != null){
+                //Check for selected Movie
+
+                mSelectedMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_KEY);
+
+                if(mSelectedMovie != null && dualPane){
+                    detailsFragment.updateMovieDetails(mSelectedMovie);
+                }
+            }
         }else{
             //Check if data is available in the saved instance
             if(savedInstanceState != null){
@@ -113,11 +145,21 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                     alreadyFetchedItems = gson.fromJson(listJson, MovieResults.class).getResults();
 
                     mDataItems.addAll(alreadyFetchedItems);
+
+                    mainFragment.updateMovieList(mDataItems);
+                }
+
+
+                //Check for selected Movie
+
+                mSelectedMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_KEY);
+
+                if(mSelectedMovie != null && dualPane){
+                    detailsFragment.updateMovieDetails(mSelectedMovie);
                 }
             }
         }
 
-        //mGridManager = new GridLayoutManager(MainActivity.this, GRID_SPAN);
 
 
     }
@@ -163,6 +205,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putString(MOVIE_LIST_KEY, mSavedListJson);
+        outState.putParcelable(SELECTED_MOVIE_KEY, mSelectedMovie);
         super.onSaveInstanceState(outState);
     }
 
@@ -182,7 +225,8 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
         }
 
-        mlAdapter.notifyDataSetChanged();
+        mainFragment.updateMovieList(mDataItems);
+
         mDialog.dismiss();
     }
 
@@ -193,14 +237,22 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             //TODO
 
         }
-        Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
-        detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
-        startActivity(detailsIntent);
+
+        mSelectedMovie = movieDetails;
+
+        if(!dualPane){
+            Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
+            detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
+            startActivity(detailsIntent);
+        }else{
+            detailsFragment.updateMovieDetails(movieDetails);
+        }
+
         mDialog.dismiss();
     }
 
     @Override
-    public void onListItemClicked(String movieId) {
+    public void onMovieSelected(String movieId) {
         mDialog.show();
         Uri.Builder uriBuilder = new Uri.Builder();
 
@@ -252,4 +304,5 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         mDialog.show();
     }
+
 }

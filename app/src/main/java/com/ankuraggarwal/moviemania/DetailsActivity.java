@@ -1,10 +1,12 @@
 package com.ankuraggarwal.moviemania;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -15,6 +17,8 @@ import com.ankuraggarwal.moviemania.fragments.DetailsFragment;
 import com.squareup.picasso.Picasso;
 
 public class DetailsActivity extends AppCompatActivity {
+
+    private static final String TAG = DetailsActivity.class.getSimpleName();
 
     public static final String KEY_MOVIE_DETAILS = "movie_details";
 
@@ -38,6 +42,10 @@ public class DetailsActivity extends AppCompatActivity {
         getSupportFragmentManager().beginTransaction()
                 .add(R.id.details_container, fragobj)
                 .commit();
+
+
+        Configuration config = getResources().getConfiguration();
+        Log.d(TAG, "Smallest Width =" + config.smallestScreenWidthDp);
     }
 
 }

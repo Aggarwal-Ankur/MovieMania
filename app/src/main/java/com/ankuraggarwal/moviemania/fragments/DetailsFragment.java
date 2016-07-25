@@ -59,6 +59,24 @@ public class DetailsFragment extends Fragment {
         mRatingTextView = (TextView) rootView.findViewById(R.id.rating);
         mReleaseDateTextView = (TextView) rootView.findViewById(R.id.release_date);
 
+        refreshUI();
+
+        return rootView;
+    }
+
+    // TODO: Rename method, update argument and hook method into UI event
+    public void onButtonPressed(int movieId, boolean selected) {
+        if (mListener != null) {
+            mListener.onFavoriteSelected(movieId, selected);
+        }
+    }
+
+    public void updateMovieDetails(MovieDetailsItem movieDetails){
+        this.mMovieDetails = movieDetails;
+        refreshUI();
+    }
+
+    private void refreshUI(){
         if(mMovieDetails != null){
             //setTitle(movieDetails.getTitle());
 
@@ -67,14 +85,6 @@ public class DetailsFragment extends Fragment {
             mReleaseDateTextView.setText(getResources().getString(R.string.release_date)+ " : "+ mMovieDetails.getReleaseDate());
 
             Picasso.with(getActivity()).load(IMAGE_FETCH_BASE_URL+ mMovieDetails.getPosterPath()).into(mPosterImage);
-        }
-        return rootView;
-    }
-
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(int movieId, boolean selected) {
-        if (mListener != null) {
-            mListener.onFavoriteSelected(movieId, selected);
         }
     }
 

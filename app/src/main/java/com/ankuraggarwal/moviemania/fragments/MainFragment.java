@@ -95,6 +95,10 @@ public class MainFragment extends Fragment implements MainListAdapter.ListItemCl
     public void updateMovieList(List<MovieDataItem> movieList){
         if(mDataItems != null && movieList != null){
             mDataItems.clear();
+
+            mDataItems.addAll(movieList);
+
+            mlAdapter.notifyDataSetChanged();
         }
     }
 
