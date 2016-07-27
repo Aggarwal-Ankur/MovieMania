@@ -9,12 +9,16 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.ankuraggarwal.moviemania.DetailsActivity;
@@ -54,6 +58,8 @@ public class DetailsFragment extends Fragment {
 
     private VideoListFetchTask mVideoListFetchTask;
 
+    private LinearLayout mButtonsLayout;
+
     public DetailsFragment() {
         // Required empty public constructor
     }
@@ -82,6 +88,33 @@ public class DetailsFragment extends Fragment {
         mSynopsisTv = (TextView) rootView.findViewById(R.id.synopsis);
         mRatingTextView = (TextView) rootView.findViewById(R.id.rating);
         mReleaseDateTextView = (TextView) rootView.findViewById(R.id.release_date);
+
+
+        mButtonsLayout = (LinearLayout) rootView.findViewById(R.id.details_button_layout);
+
+        Button showVideosButton = (Button) rootView.findViewById(R.id.show_videos_button);
+        showVideosButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.show();
+                Uri.Builder uriBuilder = new Uri.Builder();
+
+                String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                        .authority(IConstants.BASE_URL)
+                        .appendPath(IConstants.EXTRA_PATH_1)
+                        .appendPath(IConstants.EXTRA_PATH_2)
+                        .appendPath(mMovieDetails.getId())
+                        .appendPath(IConstants.VIDEOS_PATH)
+                        .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                        .build().toString();
+
+                if(mVideoListFetchTask != null){
+                    mVideoListFetchTask.cancel(true);
+                }
+                mVideoListFetchTask = new VideoListFetchTask();
+                mVideoListFetchTask.execute(new String[]{url});
+            }
+        });
 
         refreshUI();
 
@@ -112,34 +145,26 @@ public class DetailsFragment extends Fragment {
             mReleaseDateTextView.setText(getResources().getString(R.string.release_date)+ " : "+ mMovieDetails.getReleaseDate());
 
             Picasso.with(getActivity()).load(IMAGE_FETCH_BASE_URL+ mMovieDetails.getPosterPath()).into(mPosterImage);
+
+            mButtonsLayout.setVisibility(View.VISIBLE);
+
+            //Remove old transactions
+            FragmentManager fm = getChildFragmentManager();
+            int backstackCount = fm.getBackStackEntryCount();
+            for(int i = 0; i < backstackCount; ++i) {
+                fm.popBackStack();
+            }
         }else{
             mSynopsisTv.setVisibility(View.INVISIBLE);
             mRatingTextView.setVisibility(View.INVISIBLE);
             mReleaseDateTextView.setVisibility(View.INVISIBLE);
             mPosterImage.setVisibility(View.INVISIBLE);
 
+            mButtonsLayout.setVisibility(View.INVISIBLE);
+
             return;
         }
 
-
-        //Temp :
-        mDialog.show();
-        Uri.Builder uriBuilder = new Uri.Builder();
-
-        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
-                .authority(IConstants.BASE_URL)
-                .appendPath(IConstants.EXTRA_PATH_1)
-                .appendPath(IConstants.EXTRA_PATH_2)
-                .appendPath(mMovieDetails.getId())
-                .appendPath(IConstants.VIDEOS_PATH)
-                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
-                .build().toString();
-
-        if(mVideoListFetchTask != null){
-            mVideoListFetchTask.cancel(true);
-        }
-        mVideoListFetchTask = new VideoListFetchTask();
-        mVideoListFetchTask.execute(new String[]{url});
     }
 
     @Override
@@ -165,6 +190,16 @@ public class DetailsFragment extends Fragment {
     public void onDetach() {
         super.onDetach();
         mListener = null;
+    }
+
+    public boolean handleBackPressed(){
+        if(getChildFragmentManager().getBackStackEntryCount() > 0){
+            getChildFragmentManager().popBackStack();
+
+            return true;
+        }else{
+            return false;
+        }
     }
 
     public interface OnFavoritesSelectedListener {
@@ -221,36 +256,13 @@ public class DetailsFragment extends Fragment {
                 return;
             }
 
-            CharSequence[] videoTitles = new CharSequence[mMovieVideos.size()];
+            TrailerListFragment trailerListFragment = TrailerListFragment.newInstance(responseJson);
 
-            for(int i =0; i<mMovieVideos.size(); i++){
-                videoTitles[i] = mMovieVideos.get(i).getName();
-            }
+            getChildFragmentManager().beginTransaction()
+                    .add(R.id.details_fragment_placeholder, trailerListFragment)
+                    .addToBackStack("trailers_fragment")
+                    .commit();
 
-
-            //Show the movie videos in a list
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
-            builder.setTitle("Trailers");
-            builder.setItems(videoTitles, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int item) {
-                    //Get the Youtube Title
-
-                    String videoKey = mMovieVideos.get(item).getKey();
-
-                    try {
-                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + videoKey));
-                        startActivity(intent);
-                    } catch (ActivityNotFoundException ex) {
-                        Intent intent = new Intent(Intent.ACTION_VIEW,
-                                Uri.parse("http://www.youtube.com/watch?v=" + videoKey));
-                        startActivity(intent);
-                    }
-                }
-            });
-            builder.show();
         }
 
     }

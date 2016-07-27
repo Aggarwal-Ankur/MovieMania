@@ -296,4 +296,12 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog.show();
     }
 
+    @Override
+    public void onBackPressed() {
+
+        if(!(dualPane && detailsFragment.handleBackPressed())){
+            super.onBackPressed();
+        }
+
+    }
 }
