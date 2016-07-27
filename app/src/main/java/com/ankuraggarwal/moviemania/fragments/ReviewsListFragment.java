@@ -75,7 +75,7 @@ public class ReviewsListFragment extends ListFragment implements OnItemClickList
         CharSequence[] reviewAuthors = new CharSequence[mMovieReviews.size()];
 
         for(int i =0; i<mMovieReviews.size(); i++){
-            reviewAuthors[i] = "Review by" + mMovieReviews.get(i).getAuthor();
+            reviewAuthors[i] = "Review by " + mMovieReviews.get(i).getAuthor();
         }
 
         ArrayAdapter adapter = new ArrayAdapter(getActivity(), android.R.layout.simple_list_item_1, reviewAuthors);
@@ -86,17 +86,15 @@ public class ReviewsListFragment extends ListFragment implements OnItemClickList
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        //Get the Youtube video key
-        /*String videoKey = mMovieReviews.get(position).getKey();
+        //Get the content and pass it to review fragment
 
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + videoKey));
-            startActivity(intent);
-        } catch (ActivityNotFoundException ex) {
-            Intent intent = new Intent(Intent.ACTION_VIEW,
-                    Uri.parse("http://www.youtube.com/watch?v=" + videoKey));
-            startActivity(intent);
-        }*/
+        MovieReviews.Results currentMovieReview = mMovieReviews.get(position);
+
+        MovieReviewFragment reviewListFragment = MovieReviewFragment.newInstance("Review by " + currentMovieReview.getAuthor(), currentMovieReview.getContent());
+        getChildFragmentManager().beginTransaction()
+                .add(R.id.fragment_container, reviewListFragment)
+                .addToBackStack("review_content_fragment")
+                .commit();
     }
 
 }
