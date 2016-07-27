@@ -17,6 +17,7 @@ public interface IConstants {
     String POPULAR_PATH = "popular";
     String TOP_RATED_PATH = "top_rated";
     String VIDEOS_PATH = "videos";
+    String REVIEWS_PATH = "reviews";
 
     String API_KEY_PARAMETER = "api_key";
 }

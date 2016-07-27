@@ -27,6 +27,7 @@ import com.ankuraggarwal.moviemania.R;
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
 import com.ankuraggarwal.moviemania.data.MovieResults;
+import com.ankuraggarwal.moviemania.data.MovieReviews;
 import com.ankuraggarwal.moviemania.data.MovieVideos;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
@@ -57,6 +58,7 @@ public class DetailsFragment extends Fragment {
     private ProgressDialog mDialog;
 
     private VideoListFetchTask mVideoListFetchTask;
+    private ReviewListFetchTask mReviewListFetchTask;
 
     private LinearLayout mButtonsLayout;
 
@@ -113,6 +115,30 @@ public class DetailsFragment extends Fragment {
                 }
                 mVideoListFetchTask = new VideoListFetchTask();
                 mVideoListFetchTask.execute(new String[]{url});
+            }
+        });
+
+        Button showReviewsButton = (Button) rootView.findViewById(R.id.show_reviews_button);
+        showReviewsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDialog.show();
+                Uri.Builder uriBuilder = new Uri.Builder();
+
+                String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                        .authority(IConstants.BASE_URL)
+                        .appendPath(IConstants.EXTRA_PATH_1)
+                        .appendPath(IConstants.EXTRA_PATH_2)
+                        .appendPath(mMovieDetails.getId())
+                        .appendPath(IConstants.REVIEWS_PATH)
+                        .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                        .build().toString();
+
+                if(mReviewListFetchTask != null){
+                    mReviewListFetchTask.cancel(true);
+                }
+                mReviewListFetchTask = new ReviewListFetchTask();
+                mReviewListFetchTask.execute(new String[]{url});
             }
         });
 
@@ -195,7 +221,6 @@ public class DetailsFragment extends Fragment {
     public boolean handleBackPressed(){
         if(getChildFragmentManager().getBackStackEntryCount() > 0){
             getChildFragmentManager().popBackStack();
-
             return true;
         }else{
             return false;
@@ -209,7 +234,6 @@ public class DetailsFragment extends Fragment {
 
 
     private class VideoListFetchTask extends AsyncTask<String, Void, List<MovieVideos.Results>> {
-
         private OkHttpClient client;
         private String responseJson;
 
@@ -231,17 +255,12 @@ public class DetailsFragment extends Fragment {
 
                 responseJson = response.body().string();
 
-
                 Gson gson = new Gson();
-
                 mMovieVideos = gson.fromJson(responseJson, MovieVideos.class).getMovieVideoList();
-
                 Log.d(TAG, "List Json = " + responseJson);
 
                 mDialog.dismiss();
-
                 return mMovieVideos;
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -251,19 +270,65 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieVideos.Results> movieDataItems) {
             super.onPostExecute(movieDataItems);
-
             if(isCancelled() || mMovieVideos == null || mMovieVideos.isEmpty()){
                 return;
             }
 
             TrailerListFragment trailerListFragment = TrailerListFragment.newInstance(responseJson);
-
             getChildFragmentManager().beginTransaction()
                     .add(R.id.details_fragment_placeholder, trailerListFragment)
                     .addToBackStack("trailers_fragment")
                     .commit();
 
         }
+    }
 
+    private class ReviewListFetchTask extends AsyncTask<String, Void, List<MovieReviews.Results>> {
+        private OkHttpClient client;
+        private String responseJson;
+
+        private List<MovieReviews.Results> mMovieReviews;
+
+        @Override
+        protected List<MovieReviews.Results> doInBackground(String... params) {
+            if (params == null || params[0] == null || params[0].isEmpty()) {
+                return null;
+            }
+
+            client = new OkHttpClient();
+
+            try {
+                Request request = new Request.Builder()
+                        .url(params[0])
+                        .build();
+                Response response = client.newCall(request).execute();
+
+                responseJson = response.body().string();
+
+                Gson gson = new Gson();
+                mMovieReviews = gson.fromJson(responseJson, MovieReviews.class).getMovieReviewList();
+                Log.d(TAG, "List Json = " + responseJson);
+
+                mDialog.dismiss();
+                return mMovieReviews;
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(List<MovieReviews.Results> movieDataItems) {
+            super.onPostExecute(movieDataItems);
+            if (isCancelled() || mMovieReviews == null || mMovieReviews.isEmpty()) {
+                return;
+            }
+
+            ReviewsListFragment reviewListFragment = ReviewsListFragment.newInstance(responseJson);
+            getChildFragmentManager().beginTransaction()
+                    .add(R.id.details_fragment_placeholder, reviewListFragment)
+                    .addToBackStack("review_list_fragment")
+                    .commit();
+        }
     }
 }
