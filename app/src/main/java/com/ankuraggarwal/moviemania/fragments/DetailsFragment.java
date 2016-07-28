@@ -1,22 +1,20 @@
 package com.ankuraggarwal.moviemania.fragments;
 
 import android.app.ProgressDialog;
-import android.content.ActivityNotFoundException;
+import android.content.ContentValues;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -25,11 +23,11 @@ import android.widget.Toast;
 import com.ankuraggarwal.moviemania.DetailsActivity;
 import com.ankuraggarwal.moviemania.IConstants;
 import com.ankuraggarwal.moviemania.R;
-import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
-import com.ankuraggarwal.moviemania.data.MovieResults;
 import com.ankuraggarwal.moviemania.data.MovieReviews;
 import com.ankuraggarwal.moviemania.data.MovieVideos;
+import com.ankuraggarwal.moviemania.provider.FavoritesContract;
+import com.ankuraggarwal.moviemania.provider.FavoritesProvider;
 import com.google.gson.Gson;
 import com.squareup.picasso.Picasso;
 
@@ -65,6 +63,11 @@ public class DetailsFragment extends Fragment {
 
     private static final String REVIEW_LIST_FRAGMENT_TAG = "review_list_fragment";
     private static final String TRAILER_LIST_FRAGMENT_TAG = "trailers_fragment";
+
+    private Button favoriteButton;
+
+    private boolean isEntryInDb = false;
+    private boolean isFavorite = false;
 
     public DetailsFragment() {
         // Required empty public constructor
@@ -146,16 +149,59 @@ public class DetailsFragment extends Fragment {
             }
         });
 
+        favoriteButton = (Button) rootView.findViewById(R.id.add_to_favorites_button);
+        favoriteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onFavoritesButtonPressed();
+            }
+        });
+
+
         refreshUI();
 
         return rootView;
     }
 
-    // TODO: Rename method, update argument and hook method into UI event
-    public void onButtonPressed(int movieId, boolean selected) {
-        if (mListener != null) {
-            mListener.onFavoriteSelected(movieId, selected);
+    public void onFavoritesButtonPressed() {
+        favoriteButton.setEnabled(false);
+
+        checkDB();
+
+        if(!isEntryInDb){
+            // Add to favorites
+            ContentValues values = new ContentValues();
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_MOVIE_ID, mMovieDetails.getId());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_TITLE, mMovieDetails.getTitle());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_DESCRIPTION, mMovieDetails.getOverview());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_IMAGE, mMovieDetails.getPosterPath());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_RATING, mMovieDetails.getVoteAverage());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_RELEASE_DATE, mMovieDetails.getReleaseDate());
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_IS_FAVORITE, 1);
+            Uri uri = getActivity().getContentResolver().insert(FavoritesContract.FavoriteMovies.CONTENT_URI, values);
+
+            isFavorite = true;
+
+            Log.d(TAG, "Insert Uri = "+ uri.toString());
+        }else{
+            isFavorite = !isFavorite;
+
+            int favoriteValue = isFavorite ? 1: 0;
+
+            //Update the value
+            ContentValues values = new ContentValues();
+            values.put(FavoritesContract.FavoriteMovies.COLUMN_IS_FAVORITE, favoriteValue);
+
+            int updatedRows = getActivity().getContentResolver().update(FavoritesContract.FavoriteMovies.CONTENT_URI,
+                    values,
+                    FavoritesContract.FavoriteMovies.COLUMN_MOVIE_ID + " = " + mMovieDetails.getId(),
+                    null);
+
+            Log.d(TAG, "Update rows = "+ updatedRows);
         }
+
+        refreshFavoritesButton();
+        favoriteButton.setEnabled(true);
     }
 
     public void updateMovieDetails(MovieDetailsItem movieDetails){
@@ -172,8 +218,23 @@ public class DetailsFragment extends Fragment {
         }
     }
 
+    private void checkDB(){
+        Cursor cursor = getActivity().getContentResolver().query(FavoritesContract.FavoriteMovies.CONTENT_URI,
+                FavoritesContract.FavoriteMovies.ALL_COLUMNS,
+                FavoritesContract.FavoriteMovies.COLUMN_MOVIE_ID + " = " + mMovieDetails.getId(),
+                null, null, null);
+
+        cursor.moveToFirst();
+        if(!cursor.isAfterLast()){
+            isEntryInDb = true;
+
+            isFavorite = (cursor.getInt(cursor.getColumnIndex(FavoritesContract.FavoriteMovies.COLUMN_IS_FAVORITE)) == 1)? true: false;
+        }
+    }
+
     private void refreshUI(){
         if(mMovieDetails != null){
+            checkDB();
             mSynopsisTv.setVisibility(View.VISIBLE);
             mRatingTextView.setVisibility(View.VISIBLE);
             mReleaseDateTextView.setVisibility(View.VISIBLE);
@@ -186,6 +247,8 @@ public class DetailsFragment extends Fragment {
             Picasso.with(getActivity()).load(IMAGE_FETCH_BASE_URL+ mMovieDetails.getPosterPath()).into(mPosterImage);
 
             mButtonsLayout.setVisibility(View.VISIBLE);
+
+            refreshFavoritesButton();
         }else{
             mSynopsisTv.setVisibility(View.INVISIBLE);
             mRatingTextView.setVisibility(View.INVISIBLE);
@@ -197,6 +260,14 @@ public class DetailsFragment extends Fragment {
             return;
         }
 
+    }
+
+    private void refreshFavoritesButton(){
+        if(isFavorite){
+            favoriteButton.setText(getResources().getString(R.string.remove_from_favs));
+        }else{
+            favoriteButton.setText(getResources().getString(R.string.add_to_favs));
+        }
     }
 
     @Override

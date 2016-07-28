@@ -9,6 +9,10 @@
     <string name="details_user_rating">Audience Rating</string>
     <string name="release_date">Released On</string>
 
+    <!-- Button Texts -->
+    <string name="add_to_favs">Add to favorites</string>
+    <string name="remove_from_favs">Remove from favorites</string>
+
 
     <!-- Menu Items-->
     <string name="see_popular">See Popular Movies</string>

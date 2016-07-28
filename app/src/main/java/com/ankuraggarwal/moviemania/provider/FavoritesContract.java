@@ -10,7 +10,7 @@ import android.provider.BaseColumns;
 
 public class FavoritesContract {
     //Create the content Authority
-    public static final String AUTHORITY = "com.aggarwalankur.moviemania.provider";
+    public static final String AUTHORITY = "com.aggarwalankur.moviemania.favorites";
 
     //Create the content URI
     public static final Uri CONTENT_URI = Uri.parse("content://" + AUTHORITY);
@@ -18,7 +18,7 @@ public class FavoritesContract {
 
     public static final class FavoriteMovies implements BaseColumns{
 
-        public static final Uri CONTENT_URI =  Uri.withAppendedPath(FavoritesContract.CONTENT_URI, "movies");
+        public static final Uri CONTENT_URI =  Uri.withAppendedPath(FavoritesContract.CONTENT_URI, "favorite_movie");
 
         public static final String CONTENT_TYPE = ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + AUTHORITY + "/" + "favorite_movie";
         public static final String CONTENT_ITEM_TYPE = ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + AUTHORITY + "/" + "favorite_movie";
@@ -31,6 +31,15 @@ public class FavoritesContract {
         public static final String COLUMN_DESCRIPTION = "description";
         public static final String COLUMN_RATING = "rating";
         public static final String COLUMN_RELEASE_DATE = "release_date";
+        public static final String COLUMN_IS_FAVORITE = "is_favorite";
+
+        public static final String[] ALL_COLUMNS = {COLUMN_MOVIE_ID,
+                COLUMN_TITLE,
+                COLUMN_IMAGE,
+                COLUMN_DESCRIPTION,
+                COLUMN_RATING,
+                COLUMN_RELEASE_DATE,
+                COLUMN_IS_FAVORITE};
     }
 
 }

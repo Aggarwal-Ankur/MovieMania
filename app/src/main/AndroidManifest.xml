@@ -26,6 +26,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ankuraggarwal.moviemania.MainActivity" />
         </activity>
+
+        <provider
+            android:authorities="com.aggarwalankur.moviemania.favorites"
+            android:name="com.ankuraggarwal.moviemania.provider.FavoritesProvider"/>
     </application>
 
 </manifest>
