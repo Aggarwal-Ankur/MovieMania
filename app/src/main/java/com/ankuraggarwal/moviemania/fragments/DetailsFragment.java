@@ -20,6 +20,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.ankuraggarwal.moviemania.DetailsActivity;
 import com.ankuraggarwal.moviemania.IConstants;
@@ -61,6 +62,9 @@ public class DetailsFragment extends Fragment {
     private ReviewListFetchTask mReviewListFetchTask;
 
     private LinearLayout mButtonsLayout;
+
+    private static final String REVIEW_LIST_FRAGMENT_TAG = "review_list_fragment";
+    private static final String TRAILER_LIST_FRAGMENT_TAG = "trailers_fragment";
 
     public DetailsFragment() {
         // Required empty public constructor
@@ -159,6 +163,15 @@ public class DetailsFragment extends Fragment {
         refreshUI();
     }
 
+    public void clearBackstack(){
+        //Remove old transactions
+        FragmentManager fm = getChildFragmentManager();
+        int backstackCount = fm.getBackStackEntryCount();
+        for(int i = 0; i < backstackCount; ++i) {
+            fm.popBackStack();
+        }
+    }
+
     private void refreshUI(){
         if(mMovieDetails != null){
             mSynopsisTv.setVisibility(View.VISIBLE);
@@ -173,13 +186,6 @@ public class DetailsFragment extends Fragment {
             Picasso.with(getActivity()).load(IMAGE_FETCH_BASE_URL+ mMovieDetails.getPosterPath()).into(mPosterImage);
 
             mButtonsLayout.setVisibility(View.VISIBLE);
-
-            //Remove old transactions
-            FragmentManager fm = getChildFragmentManager();
-            int backstackCount = fm.getBackStackEntryCount();
-            for(int i = 0; i < backstackCount; ++i) {
-                fm.popBackStack();
-            }
         }else{
             mSynopsisTv.setVisibility(View.INVISIBLE);
             mRatingTextView.setVisibility(View.INVISIBLE);
@@ -219,8 +225,13 @@ public class DetailsFragment extends Fragment {
     }
 
     public boolean handleBackPressed(){
-        if(getChildFragmentManager().getBackStackEntryCount() > 0){
-            getChildFragmentManager().popBackStack();
+
+        android.support.v4.app.FragmentManager childFragmentManager = getChildFragmentManager();
+        if(childFragmentManager.getBackStackEntryCount() > 0){
+            Fragment reviewListFragment = childFragmentManager.findFragmentByTag(REVIEW_LIST_FRAGMENT_TAG);
+            if(!(reviewListFragment != null && ((ReviewsListFragment)reviewListFragment).handleBackPressed())){
+                childFragmentManager.popBackStack();
+            }
             return true;
         }else{
             return false;
@@ -270,16 +281,19 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieVideos.Results> movieDataItems) {
             super.onPostExecute(movieDataItems);
-            if(isCancelled() || mMovieVideos == null || mMovieVideos.isEmpty()){
+            if(isCancelled() || mMovieVideos == null ){
                 return;
             }
 
-            TrailerListFragment trailerListFragment = TrailerListFragment.newInstance(responseJson);
-            getChildFragmentManager().beginTransaction()
-                    .add(R.id.details_fragment_placeholder, trailerListFragment)
-                    .addToBackStack("trailers_fragment")
-                    .commit();
-
+            if(mMovieVideos.size()< 1){
+                Toast.makeText(getActivity(), getResources().getString(R.string.error_no_trailers), Toast.LENGTH_SHORT).show();
+            }else{
+                TrailerListFragment trailerListFragment = TrailerListFragment.newInstance(responseJson);
+                getChildFragmentManager().beginTransaction()
+                        .add(R.id.details_fragment_placeholder, trailerListFragment, TRAILER_LIST_FRAGMENT_TAG)
+                        .addToBackStack(TRAILER_LIST_FRAGMENT_TAG)
+                        .commit();
+            }
         }
     }
 
@@ -320,15 +334,19 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieReviews.Results> movieDataItems) {
             super.onPostExecute(movieDataItems);
-            if (isCancelled() || mMovieReviews == null || mMovieReviews.isEmpty()) {
+            if (isCancelled() || mMovieReviews == null) {
                 return;
             }
 
-            ReviewsListFragment reviewListFragment = ReviewsListFragment.newInstance(responseJson);
-            getChildFragmentManager().beginTransaction()
-                    .add(R.id.details_fragment_placeholder, reviewListFragment)
-                    .addToBackStack("review_list_fragment")
-                    .commit();
+            if(mMovieReviews.size()< 1){
+                Toast.makeText(getActivity(), getResources().getString(R.string.error_no_reviews), Toast.LENGTH_SHORT).show();
+            }else{
+                ReviewsListFragment reviewListFragment = ReviewsListFragment.newInstance(responseJson);
+                getChildFragmentManager().beginTransaction()
+                        .add(R.id.details_fragment_placeholder, reviewListFragment, REVIEW_LIST_FRAGMENT_TAG)
+                        .addToBackStack(REVIEW_LIST_FRAGMENT_TAG)
+                        .commit();
+            }
         }
     }
 }

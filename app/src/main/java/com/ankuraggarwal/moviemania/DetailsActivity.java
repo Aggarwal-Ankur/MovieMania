@@ -22,6 +22,7 @@ public class DetailsActivity extends AppCompatActivity {
 
     public static final String KEY_MOVIE_DETAILS = "movie_details";
 
+    private DetailsFragment detailsFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,16 +37,25 @@ public class DetailsActivity extends AppCompatActivity {
 
         Bundle bundle = new Bundle();
         bundle.putParcelable(KEY_MOVIE_DETAILS, movieDetails);
-        DetailsFragment fragobj = new DetailsFragment();
-        fragobj.setArguments(bundle);
+        detailsFragment = new DetailsFragment();
+        detailsFragment.setArguments(bundle);
 
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.details_container, fragobj)
+                .add(R.id.details_container, detailsFragment)
                 .commit();
 
 
         Configuration config = getResources().getConfiguration();
         Log.d(TAG, "Smallest Width =" + config.smallestScreenWidthDp);
+    }
+
+    @Override
+    public void onBackPressed() {
+
+        if(!(detailsFragment.handleBackPressed())){
+            super.onBackPressed();
+        }
+
     }
 
 }

@@ -237,6 +237,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             startActivity(detailsIntent);
         }else{
             detailsFragment.updateMovieDetails(movieDetails);
+            detailsFragment.clearBackstack();
         }
 
         mDialog.dismiss();

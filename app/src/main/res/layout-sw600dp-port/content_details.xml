@@ -17,31 +17,68 @@
         android:layout_weight="1"
         android:scaleType="fitCenter"/>
 
-    <LinearLayout
+    <FrameLayout
+        android:id="@+id/details_fragment_placeholder"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:orientation="vertical">
+        >
 
-        <TextView
-            android:id="@+id/synopsis"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Lorem Ipsum"/>
-        <TextView
-            android:id="@+id/rating"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/details_user_rating"
-            android:visibility="gone"
-            android:layout_marginTop="@dimen/activity_vertical_margin"/>
-        <TextView
-            android:id="@+id/release_date"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/release_date"
-            android:layout_marginTop="@dimen/activity_vertical_margin"/>
-    </LinearLayout>
+            android:layout_height="match_parent">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+                <LinearLayout
+                    android:id="@+id/details_button_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:visibility="gone"
+                    android:weightSum="3">
+                    <Button
+                        android:id="@+id/show_videos_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="Show Trailers"/>
+                    <Button
+                        android:id="@+id/show_reviews_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="Show Reviews"/>
+                    <Button
+                        android:id="@+id/add_to_favorites_button"
+                        android:layout_width="0dp"
+                        android:layout_height="48dp"
+                        android:layout_weight="1"
+                        android:text="Add to Favorites"/>
+                </LinearLayout>
+                <TextView
+                    android:id="@+id/synopsis"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Lorem Ipsum"/>
+                <TextView
+                    android:id="@+id/rating"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/details_user_rating"
+                    android:layout_marginTop="@dimen/activity_vertical_margin"/>
+                <TextView
+                    android:id="@+id/release_date"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/release_date"
+                    android:layout_marginTop="@dimen/activity_vertical_margin"/>
+            </LinearLayout>
+        </ScrollView>
+
+
+    </FrameLayout>
 
 
 </LinearLayout>
