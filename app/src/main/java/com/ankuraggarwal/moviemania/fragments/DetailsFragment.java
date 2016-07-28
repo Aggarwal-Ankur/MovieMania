@@ -229,7 +229,12 @@ public class DetailsFragment extends Fragment {
             isEntryInDb = true;
 
             isFavorite = (cursor.getInt(cursor.getColumnIndex(FavoritesContract.FavoriteMovies.COLUMN_IS_FAVORITE)) == 1)? true: false;
+        }else{
+            isEntryInDb = false;
+            isFavorite = false;
         }
+
+        cursor.close();
     }
 
     private void refreshUI(){

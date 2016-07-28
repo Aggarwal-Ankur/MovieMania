@@ -14,9 +14,16 @@
     <string name="remove_from_favs">Remove from favorites</string>
 
 
+    <!-- Titles -->
+    <string name="popular_movies">Popular Movies</string>
+    <string name="top_rated_movies">Top Rated Movies</string>
+    <string name="favorites">Favorite Movies</string>
+
+
     <!-- Menu Items-->
     <string name="see_popular">See Popular Movies</string>
     <string name="see_top_rated">See Top Rated Movies</string>
+    <string name="see_favorites">See Favorite Movies</string>
 
 
     <!-- Error Messages-->

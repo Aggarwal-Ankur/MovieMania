@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     //Constants for Shared Preferences
     private static final int POPULAR_MOVIES_PREF = 1;
     private static final int TOP_RATED_MOVIES_PREF = 2;
+    private static final int FAVORITE_MOVIES_PREF = 3;
 
 
     /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
@@ -53,6 +54,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private ProgressDialog mDialog;
     private String mSavedListJson;
 
+    private boolean isFavoritesView = false;
 
     private boolean dualPane = false;
 
@@ -86,22 +88,36 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog.setIndeterminate(true);
         mDialog.setMessage("Fetching Data...");
 
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        int listType = sharedPref.getInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
+
         // If the Fragment is non-null, then it is currently being
         // retained across a configuration change.
         if (mMovieFetchFragment == null) {
             mMovieFetchFragment = new MovieFetchFragment();
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
-
-            SharedPreferences sharedPref = this.getSharedPreferences(
-                    getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-
-            int listType = sharedPref.getInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
+            fm.executePendingTransactions();
 
             if(listType == TOP_RATED_MOVIES_PREF){
                 fetchTopRatedMovies();
-            }else {
+            }else if(listType == POPULAR_MOVIES_PREF){
                 fetchPopularMovies();
+            }else{
+                mMovieFetchFragment.fetchFavoritesList();
             }
+        }
+
+        if(listType == TOP_RATED_MOVIES_PREF){
+            setTitle(getResources().getString(R.string.top_rated_movies));
+            isFavoritesView = false;
+        }else if(listType == POPULAR_MOVIES_PREF){
+            setTitle(getResources().getString(R.string.popular_movies));
+            isFavoritesView = false;
+        }else{
+            setTitle(getResources().getString(R.string.favorites));
+            isFavoritesView = true;
         }
 
 
@@ -174,12 +190,26 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                 fetchPopularMovies();
                 editor.putInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
                 editor.commit();
+                isFavoritesView = false;
+                setTitle(getResources().getString(R.string.popular_movies));
                 return true;
 
             case R.id.action_top_rated:
                 fetchTopRatedMovies();
                 editor.putInt(getString(R.string.list_type_preference), TOP_RATED_MOVIES_PREF);
                 editor.commit();
+                setTitle(getResources().getString(R.string.top_rated_movies));
+                isFavoritesView = false;
+                return true;
+
+            case R.id.action_favorites:
+                mMovieFetchFragment.fetchFavoritesList();
+
+                mDialog.show();
+                editor.putInt(getString(R.string.list_type_preference), FAVORITE_MOVIES_PREF);
+                editor.commit();
+                setTitle(getResources().getString(R.string.favorites));
+                isFavoritesView = true;
                 return true;
 
             default:
@@ -246,17 +276,22 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     @Override
     public void onMovieSelected(String movieId) {
         mDialog.show();
-        Uri.Builder uriBuilder = new Uri.Builder();
 
-        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
-                .authority(IConstants.BASE_URL)
-                .appendPath(IConstants.EXTRA_PATH_1)
-                .appendPath(IConstants.EXTRA_PATH_2)
-                .appendPath(movieId)
-                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
-                .build().toString();
+        if(isFavoritesView){
+            mMovieFetchFragment.fetchMovieDetailFromDb(movieId);
+        }else{
+            Uri.Builder uriBuilder = new Uri.Builder();
 
-        mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
+            String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                    .authority(IConstants.BASE_URL)
+                    .appendPath(IConstants.EXTRA_PATH_1)
+                    .appendPath(IConstants.EXTRA_PATH_2)
+                    .appendPath(movieId)
+                    .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                    .build().toString();
+
+            mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
+        }
     }
 
     /**
