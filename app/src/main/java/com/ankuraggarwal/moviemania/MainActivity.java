@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
@@ -24,8 +25,16 @@ import com.ankuraggarwal.moviemania.fragments.MainFragment;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
 import com.google.gson.Gson;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
@@ -156,9 +165,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                     mainFragment.updateMovieList(mDataItems);
                 }
 
-
                 //Check for selected Movie
-
                 mSelectedMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_KEY);
 
                 if(mSelectedMovie != null && dualPane){
@@ -167,8 +174,33 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             }
         }
 
+        //Check if network connects
+        Toast.makeText(this, "Netork = "+internetConnectionAvailable(1000), Toast.LENGTH_SHORT).show();
+    }
 
-
+    private boolean internetConnectionAvailable(int timeOut) {
+        InetAddress inetAddress = null;
+        try {
+            Future<InetAddress> future = Executors.newSingleThreadExecutor().submit(new Callable<InetAddress>() {
+                @Override
+                public InetAddress call() {
+                    try {
+                        return InetAddress.getByName("google.com");
+                    } catch (UnknownHostException e) {
+                        return null;
+                    }
+                }
+            });
+            inetAddress = future.get(timeOut, TimeUnit.MILLISECONDS);
+            future.cancel(true);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (ExecutionException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        }
+        return inetAddress!=null && !inetAddress.equals("");
     }
 
     @Override
