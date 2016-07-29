@@ -20,4 +20,7 @@ public interface IConstants {
     String REVIEWS_PATH = "reviews";
 
     String API_KEY_PARAMETER = "api_key";
+
+    //This has to be kept small, so as to not block the UI thread
+    int INTERNET_CONNECTION_TIMEOUT = 1500;
 }

@@ -109,24 +109,34 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
             fm.executePendingTransactions();
 
-            if(listType == TOP_RATED_MOVIES_PREF){
+            //First check if internet is available
+
+
+            if (Utils.internetConnectionAvailable() && listType == TOP_RATED_MOVIES_PREF) {
                 fetchTopRatedMovies();
-            }else if(listType == POPULAR_MOVIES_PREF){
+            } else if (Utils.internetConnectionAvailable() && listType == POPULAR_MOVIES_PREF) {
                 fetchPopularMovies();
-            }else{
+            } else {
                 mMovieFetchFragment.fetchFavoritesList();
             }
+
         }
 
-        if(listType == TOP_RATED_MOVIES_PREF){
+        //check internet again, and decide accordingly
+        if(Utils.internetConnectionAvailable() && listType == TOP_RATED_MOVIES_PREF){
             setTitle(getResources().getString(R.string.top_rated_movies));
             isFavoritesView = false;
-        }else if(listType == POPULAR_MOVIES_PREF){
+        }else if(Utils.internetConnectionAvailable() && listType == POPULAR_MOVIES_PREF){
             setTitle(getResources().getString(R.string.popular_movies));
             isFavoritesView = false;
         }else{
             setTitle(getResources().getString(R.string.favorites));
             isFavoritesView = true;
+        }
+
+        //This is actually the backup message
+        if(!Utils.internetConnectionAvailable()){
+            Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
         }
 
 
@@ -173,35 +183,9 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                 }
             }
         }
-
-        //Check if network connects
-        Toast.makeText(this, "Netork = "+internetConnectionAvailable(1000), Toast.LENGTH_SHORT).show();
     }
 
-    private boolean internetConnectionAvailable(int timeOut) {
-        InetAddress inetAddress = null;
-        try {
-            Future<InetAddress> future = Executors.newSingleThreadExecutor().submit(new Callable<InetAddress>() {
-                @Override
-                public InetAddress call() {
-                    try {
-                        return InetAddress.getByName("google.com");
-                    } catch (UnknownHostException e) {
-                        return null;
-                    }
-                }
-            });
-            inetAddress = future.get(timeOut, TimeUnit.MILLISECONDS);
-            future.cancel(true);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (ExecutionException e) {
-            e.printStackTrace();
-        } catch (TimeoutException e) {
-            e.printStackTrace();
-        }
-        return inetAddress!=null && !inetAddress.equals("");
-    }
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -219,29 +203,36 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         switch (item.getItemId()){
             case R.id.action_popular:
-                fetchPopularMovies();
                 editor.putInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
                 editor.commit();
-                isFavoritesView = false;
-                setTitle(getResources().getString(R.string.popular_movies));
+                if(Utils.internetConnectionAvailable()){
+                    fetchPopularMovies();
+                    isFavoritesView = false;
+                    setTitle(getResources().getString(R.string.popular_movies));
+                }else{
+                    Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
+                    showFavorites();
+                }
                 return true;
 
             case R.id.action_top_rated:
-                fetchTopRatedMovies();
                 editor.putInt(getString(R.string.list_type_preference), TOP_RATED_MOVIES_PREF);
                 editor.commit();
-                setTitle(getResources().getString(R.string.top_rated_movies));
-                isFavoritesView = false;
+                if(Utils.internetConnectionAvailable()){
+                    fetchTopRatedMovies();
+                    setTitle(getResources().getString(R.string.top_rated_movies));
+                    isFavoritesView = false;
+                }else{
+                    Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
+                    showFavorites();
+                }
+
                 return true;
 
             case R.id.action_favorites:
-                mMovieFetchFragment.fetchFavoritesList();
-
-                mDialog.show();
                 editor.putInt(getString(R.string.list_type_preference), FAVORITE_MOVIES_PREF);
                 editor.commit();
-                setTitle(getResources().getString(R.string.favorites));
-                isFavoritesView = true;
+                showFavorites();
                 return true;
 
             default:
@@ -260,70 +251,6 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         outState.putString(MOVIE_LIST_KEY, mSavedListJson);
         outState.putParcelable(SELECTED_MOVIE_KEY, mSelectedMovie);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onListFetchCompleted(List<MovieDataItem> movieDataItems) {
-        if(mDataItems == null){
-            return;
-        }
-        mDataItems.clear();
-
-        mSavedListJson = mMovieFetchFragment.getListJson();
-
-        //Error handling
-        if(movieDataItems != null){
-            mDataItems.addAll(movieDataItems);
-        }else{
-            Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
-        }
-
-        mainFragment.updateMovieList(mDataItems);
-
-        mDialog.dismiss();
-    }
-
-    @Override
-    public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
-        if(movieDetails == null){
-            //Some error occurred
-            //TODO
-
-        }
-
-        mSelectedMovie = movieDetails;
-
-        if(!dualPane){
-            Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
-            detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
-            startActivity(detailsIntent);
-        }else{
-            detailsFragment.updateMovieDetails(movieDetails);
-            detailsFragment.clearBackstack();
-        }
-
-        mDialog.dismiss();
-    }
-
-    @Override
-    public void onMovieSelected(String movieId) {
-        mDialog.show();
-
-        if(isFavoritesView){
-            mMovieFetchFragment.fetchMovieDetailFromDb(movieId);
-        }else{
-            Uri.Builder uriBuilder = new Uri.Builder();
-
-            String url = uriBuilder.scheme(IConstants.URL_SCHEME)
-                    .authority(IConstants.BASE_URL)
-                    .appendPath(IConstants.EXTRA_PATH_1)
-                    .appendPath(IConstants.EXTRA_PATH_2)
-                    .appendPath(movieId)
-                    .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
-                    .build().toString();
-
-            mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
-        }
     }
 
     /**
@@ -362,6 +289,88 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mMovieFetchFragment.fetchListFromUrl(url);
 
         mDialog.show();
+    }
+
+    /**
+     * Utility function to show favorites from DB
+     */
+    private void showFavorites(){
+        mMovieFetchFragment.fetchFavoritesList();
+
+        mDialog.show();
+        setTitle(getResources().getString(R.string.favorites));
+        isFavoritesView = true;
+    }
+
+    @Override
+    public void onListFetchCompleted(List<MovieDataItem> movieDataItems) {
+        if(mDataItems == null){
+            return;
+        }
+        mDataItems.clear();
+
+        mSavedListJson = mMovieFetchFragment.getListJson();
+
+        //Error handling
+        if(movieDataItems != null){
+            mDataItems.addAll(movieDataItems);
+        }else{
+            Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
+        }
+
+        mainFragment.updateMovieList(mDataItems);
+
+        mDialog.dismiss();
+    }
+
+    @Override
+    /**
+     * Called from click listener of the selected movie
+     */
+    public void onMovieSelected(String movieId) {
+        mDialog.show();
+
+        //If this is the favorites view, show movie from DB. Otherwise, fetch it from API
+        if(isFavoritesView){
+            mMovieFetchFragment.fetchMovieDetailFromDb(movieId);
+        }else{
+            Uri.Builder uriBuilder = new Uri.Builder();
+
+            String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                    .authority(IConstants.BASE_URL)
+                    .appendPath(IConstants.EXTRA_PATH_1)
+                    .appendPath(IConstants.EXTRA_PATH_2)
+                    .appendPath(movieId)
+                    .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                    .build().toString();
+
+            mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
+        }
+    }
+
+    @Override
+    /**
+     * Function executed when selected movie details are fetched
+     */
+    public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
+        if(movieDetails == null){
+            //Some error occurred
+            //TODO
+
+        }
+
+        mSelectedMovie = movieDetails;
+
+        if(!dualPane){
+            Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
+            detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
+            startActivity(detailsIntent);
+        }else{
+            detailsFragment.updateMovieDetails(movieDetails);
+            detailsFragment.clearBackstack();
+        }
+
+        mDialog.dismiss();
     }
 
     @Override

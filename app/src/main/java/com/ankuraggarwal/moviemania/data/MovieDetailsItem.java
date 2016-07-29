@@ -72,6 +72,7 @@ public class MovieDetailsItem implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
         dest.writeString(title);
         dest.writeString(releaseDate);
         dest.writeString(overview);
@@ -84,6 +85,7 @@ public class MovieDetailsItem implements Parcelable{
     }
 
     public MovieDetailsItem(Parcel inParcel){
+        id = inParcel.readString();
         title = inParcel.readString();
         releaseDate = inParcel.readString();
         overview = inParcel.readString();
