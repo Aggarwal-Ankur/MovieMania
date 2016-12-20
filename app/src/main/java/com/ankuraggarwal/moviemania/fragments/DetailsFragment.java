@@ -46,7 +46,7 @@ public class DetailsFragment extends Fragment {
 
     private ImageView mPosterImage;
 
-    private TextView mSynopsisTv, mRatingTextView, mReleaseDateTextView;
+    private TextView mTitleTv, mSynopsisTv, mRatingTextView, mReleaseDateTextView;
 
     private static final String IMAGE_FETCH_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
@@ -78,7 +78,6 @@ public class DetailsFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         //Build the dialog
         mDialog = new ProgressDialog(getActivity());
         mDialog.setIndeterminate(true);
@@ -93,6 +92,7 @@ public class DetailsFragment extends Fragment {
         }
         // Inflate the layout for this fragment
         ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.content_details, container, false);
+        mTitleTv = (TextView) rootView.findViewById(R.id.movie_title);
         mPosterImage = (ImageView) rootView.findViewById(R.id.imageView);
         mSynopsisTv = (TextView) rootView.findViewById(R.id.synopsis);
         mRatingTextView = (TextView) rootView.findViewById(R.id.rating);
@@ -101,6 +101,7 @@ public class DetailsFragment extends Fragment {
 
         mButtonsLayout = (LinearLayout) rootView.findViewById(R.id.details_button_layout);
 
+        //Get the three buttons and attach their respective click listeners
         Button showVideosButton = (Button) rootView.findViewById(R.id.show_videos_button);
         showVideosButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,6 +164,9 @@ public class DetailsFragment extends Fragment {
         return rootView;
     }
 
+    /**
+     * Helper function for favoriting and unfavoriting
+     */
     public void onFavoritesButtonPressed() {
         favoriteButton.setEnabled(false);
 
@@ -204,11 +208,18 @@ public class DetailsFragment extends Fragment {
         favoriteButton.setEnabled(true);
     }
 
+    /**
+     * Called from the main fragment, to update the selected movie details
+     * @param movieDetails
+     */
     public void updateMovieDetails(MovieDetailsItem movieDetails){
         this.mMovieDetails = movieDetails;
         refreshUI();
     }
 
+    /**
+     * Utility function, useful when the trailers or reviews are displayed
+     */
     public void clearBackstack(){
         //Remove old transactions
         FragmentManager fm = getChildFragmentManager();
@@ -218,6 +229,9 @@ public class DetailsFragment extends Fragment {
         }
     }
 
+    /**
+     * Function to check if movie is in db or not
+     */
     private void checkDB(){
         Cursor cursor = getActivity().getContentResolver().query(FavoritesContract.FavoriteMovies.CONTENT_URI,
                 FavoritesContract.FavoriteMovies.ALL_COLUMNS,
@@ -229,17 +243,27 @@ public class DetailsFragment extends Fragment {
             isEntryInDb = true;
 
             isFavorite = (cursor.getInt(cursor.getColumnIndex(FavoritesContract.FavoriteMovies.COLUMN_IS_FAVORITE)) == 1)? true: false;
+        }else{
+            isEntryInDb = false;
+            isFavorite = false;
         }
+
+        cursor.close();
     }
 
+    /**
+     * Utility function to update the UI
+     */
     private void refreshUI(){
         if(mMovieDetails != null){
             checkDB();
+            mTitleTv.setVisibility(View.VISIBLE);
             mSynopsisTv.setVisibility(View.VISIBLE);
             mRatingTextView.setVisibility(View.VISIBLE);
             mReleaseDateTextView.setVisibility(View.VISIBLE);
             mPosterImage.setVisibility(View.VISIBLE);
 
+            mTitleTv.setText(mMovieDetails.getTitle());
             mSynopsisTv.setText(mMovieDetails.getOverview());
             mRatingTextView.setText(getResources().getString(R.string.details_user_rating)+ " : "+ mMovieDetails.getVoteAverage());
             mReleaseDateTextView.setText(getResources().getString(R.string.release_date)+ " : "+ mMovieDetails.getReleaseDate());
@@ -250,6 +274,7 @@ public class DetailsFragment extends Fragment {
 
             refreshFavoritesButton();
         }else{
+            mTitleTv.setVisibility(View.INVISIBLE);
             mSynopsisTv.setVisibility(View.INVISIBLE);
             mRatingTextView.setVisibility(View.INVISIBLE);
             mReleaseDateTextView.setVisibility(View.INVISIBLE);
@@ -262,6 +287,9 @@ public class DetailsFragment extends Fragment {
 
     }
 
+    /**
+     * This function toggles the favorite button text (Favorite/ Un-Favorite)
+     */
     private void refreshFavoritesButton(){
         if(isFavorite){
             favoriteButton.setText(getResources().getString(R.string.remove_from_favs));
@@ -310,11 +338,13 @@ public class DetailsFragment extends Fragment {
     }
 
     public interface OnFavoritesSelectedListener {
-        // TODO: Update argument type and name
         void onFavoriteSelected(int movieId, boolean selected);
     }
 
 
+    /**
+     * Utility Asynctask to fetch the Trailers
+     */
     private class VideoListFetchTask extends AsyncTask<String, Void, List<MovieVideos.Results>> {
         private OkHttpClient client;
         private String responseJson;
@@ -352,11 +382,11 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieVideos.Results> movieDataItems) {
             super.onPostExecute(movieDataItems);
-            if(isCancelled() || mMovieVideos == null ){
+            if(isCancelled()){
                 return;
             }
 
-            if(mMovieVideos.size()< 1){
+            if(mMovieVideos == null || mMovieVideos.size()< 1){
                 Toast.makeText(getActivity(), getResources().getString(R.string.error_no_trailers), Toast.LENGTH_SHORT).show();
             }else{
                 TrailerListFragment trailerListFragment = TrailerListFragment.newInstance(responseJson);
@@ -368,6 +398,9 @@ public class DetailsFragment extends Fragment {
         }
     }
 
+    /**
+     * Utility Asynctask to fetch the reviews
+     */
     private class ReviewListFetchTask extends AsyncTask<String, Void, List<MovieReviews.Results>> {
         private OkHttpClient client;
         private String responseJson;
@@ -405,11 +438,11 @@ public class DetailsFragment extends Fragment {
         @Override
         protected void onPostExecute(List<MovieReviews.Results> movieDataItems) {
             super.onPostExecute(movieDataItems);
-            if (isCancelled() || mMovieReviews == null) {
+            if (isCancelled()) {
                 return;
             }
 
-            if(mMovieReviews.size()< 1){
+            if(mMovieReviews == null || mMovieReviews.size()< 1){
                 Toast.makeText(getActivity(), getResources().getString(R.string.error_no_reviews), Toast.LENGTH_SHORT).show();
             }else{
                 ReviewsListFragment reviewListFragment = ReviewsListFragment.newInstance(responseJson);

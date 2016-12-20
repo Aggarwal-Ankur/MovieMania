@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.ankuraggarwal.moviemania.data.MovieDetailsItem;
@@ -24,8 +25,16 @@ import com.ankuraggarwal.moviemania.fragments.MainFragment;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
 import com.google.gson.Gson;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static com.ankuraggarwal.moviemania.BuildConfig.MOVIE_DB_API_KEY;
 
@@ -38,6 +47,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     //Constants for Shared Preferences
     private static final int POPULAR_MOVIES_PREF = 1;
     private static final int TOP_RATED_MOVIES_PREF = 2;
+    private static final int FAVORITE_MOVIES_PREF = 3;
 
 
     /** Because this is a retained fragment and our AsyctTask is inside this, we do not need to implement onSaveInstanceState() in this activity*/
@@ -53,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     private ProgressDialog mDialog;
     private String mSavedListJson;
 
+    private boolean isFavoritesView = false;
 
     private boolean dualPane = false;
 
@@ -86,22 +97,46 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mDialog.setIndeterminate(true);
         mDialog.setMessage("Fetching Data...");
 
+        SharedPreferences sharedPref = this.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        int listType = sharedPref.getInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
+
         // If the Fragment is non-null, then it is currently being
         // retained across a configuration change.
         if (mMovieFetchFragment == null) {
             mMovieFetchFragment = new MovieFetchFragment();
             fm.beginTransaction().add(mMovieFetchFragment, TAG_ASYNC_FRAGMENT).commit();
+            fm.executePendingTransactions();
 
-            SharedPreferences sharedPref = this.getSharedPreferences(
-                    getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+            //First check if internet is available
 
-            int listType = sharedPref.getInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
 
-            if(listType == TOP_RATED_MOVIES_PREF){
+            if (Utils.internetConnectionAvailable() && listType == TOP_RATED_MOVIES_PREF) {
                 fetchTopRatedMovies();
-            }else {
+            } else if (Utils.internetConnectionAvailable() && listType == POPULAR_MOVIES_PREF) {
                 fetchPopularMovies();
+            } else {
+                mMovieFetchFragment.fetchFavoritesList();
             }
+
+        }
+
+        //check internet again, and decide accordingly
+        if(Utils.internetConnectionAvailable() && listType == TOP_RATED_MOVIES_PREF){
+            setTitle(getResources().getString(R.string.top_rated_movies));
+            isFavoritesView = false;
+        }else if(Utils.internetConnectionAvailable() && listType == POPULAR_MOVIES_PREF){
+            setTitle(getResources().getString(R.string.popular_movies));
+            isFavoritesView = false;
+        }else{
+            setTitle(getResources().getString(R.string.favorites));
+            isFavoritesView = true;
+        }
+
+        //This is actually the backup message
+        if(!Utils.internetConnectionAvailable()){
+            Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
         }
 
 
@@ -140,9 +175,7 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                     mainFragment.updateMovieList(mDataItems);
                 }
 
-
                 //Check for selected Movie
-
                 mSelectedMovie = savedInstanceState.getParcelable(SELECTED_MOVIE_KEY);
 
                 if(mSelectedMovie != null && dualPane){
@@ -150,10 +183,9 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
                 }
             }
         }
-
-
-
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -171,15 +203,36 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
 
         switch (item.getItemId()){
             case R.id.action_popular:
-                fetchPopularMovies();
                 editor.putInt(getString(R.string.list_type_preference), POPULAR_MOVIES_PREF);
                 editor.commit();
+                if(Utils.internetConnectionAvailable()){
+                    fetchPopularMovies();
+                    isFavoritesView = false;
+                    setTitle(getResources().getString(R.string.popular_movies));
+                }else{
+                    Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
+                    showFavorites();
+                }
                 return true;
 
             case R.id.action_top_rated:
-                fetchTopRatedMovies();
                 editor.putInt(getString(R.string.list_type_preference), TOP_RATED_MOVIES_PREF);
                 editor.commit();
+                if(Utils.internetConnectionAvailable()){
+                    fetchTopRatedMovies();
+                    setTitle(getResources().getString(R.string.top_rated_movies));
+                    isFavoritesView = false;
+                }else{
+                    Toast.makeText(this, getResources().getString(R.string.error_no_internet), Toast.LENGTH_LONG).show();
+                    showFavorites();
+                }
+
+                return true;
+
+            case R.id.action_favorites:
+                editor.putInt(getString(R.string.list_type_preference), FAVORITE_MOVIES_PREF);
+                editor.commit();
+                showFavorites();
                 return true;
 
             default:
@@ -198,65 +251,6 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         outState.putString(MOVIE_LIST_KEY, mSavedListJson);
         outState.putParcelable(SELECTED_MOVIE_KEY, mSelectedMovie);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onListFetchCompleted(List<MovieDataItem> movieDataItems) {
-        if(mDataItems == null){
-            return;
-        }
-        mDataItems.clear();
-
-        mSavedListJson = mMovieFetchFragment.getListJson();
-
-        //Error handling
-        if(movieDataItems != null){
-            mDataItems.addAll(movieDataItems);
-        }else{
-            Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
-        }
-
-        mainFragment.updateMovieList(mDataItems);
-
-        mDialog.dismiss();
-    }
-
-    @Override
-    public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
-        if(movieDetails == null){
-            //Some error occurred
-            //TODO
-
-        }
-
-        mSelectedMovie = movieDetails;
-
-        if(!dualPane){
-            Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
-            detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
-            startActivity(detailsIntent);
-        }else{
-            detailsFragment.updateMovieDetails(movieDetails);
-            detailsFragment.clearBackstack();
-        }
-
-        mDialog.dismiss();
-    }
-
-    @Override
-    public void onMovieSelected(String movieId) {
-        mDialog.show();
-        Uri.Builder uriBuilder = new Uri.Builder();
-
-        String url = uriBuilder.scheme(IConstants.URL_SCHEME)
-                .authority(IConstants.BASE_URL)
-                .appendPath(IConstants.EXTRA_PATH_1)
-                .appendPath(IConstants.EXTRA_PATH_2)
-                .appendPath(movieId)
-                .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
-                .build().toString();
-
-        mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
     }
 
     /**
@@ -295,6 +289,88 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
         mMovieFetchFragment.fetchListFromUrl(url);
 
         mDialog.show();
+    }
+
+    /**
+     * Utility function to show favorites from DB
+     */
+    private void showFavorites(){
+        mMovieFetchFragment.fetchFavoritesList();
+
+        mDialog.show();
+        setTitle(getResources().getString(R.string.favorites));
+        isFavoritesView = true;
+    }
+
+    @Override
+    public void onListFetchCompleted(List<MovieDataItem> movieDataItems) {
+        if(mDataItems == null){
+            return;
+        }
+        mDataItems.clear();
+
+        mSavedListJson = mMovieFetchFragment.getListJson();
+
+        //Error handling
+        if(movieDataItems != null){
+            mDataItems.addAll(movieDataItems);
+        }else{
+            Snackbar.make(findViewById(android.R.id.content), R.string.error_connectivity, Snackbar.LENGTH_LONG).show();
+        }
+
+        mainFragment.updateMovieList(mDataItems);
+
+        mDialog.dismiss();
+    }
+
+    @Override
+    /**
+     * Called from click listener of the selected movie
+     */
+    public void onMovieSelected(String movieId) {
+        mDialog.show();
+
+        //If this is the favorites view, show movie from DB. Otherwise, fetch it from API
+        if(isFavoritesView){
+            mMovieFetchFragment.fetchMovieDetailFromDb(movieId);
+        }else{
+            Uri.Builder uriBuilder = new Uri.Builder();
+
+            String url = uriBuilder.scheme(IConstants.URL_SCHEME)
+                    .authority(IConstants.BASE_URL)
+                    .appendPath(IConstants.EXTRA_PATH_1)
+                    .appendPath(IConstants.EXTRA_PATH_2)
+                    .appendPath(movieId)
+                    .appendQueryParameter(IConstants.API_KEY_PARAMETER, MOVIE_DB_API_KEY)
+                    .build().toString();
+
+            mMovieFetchFragment.fetchMovieDetailsFromUrl(url);
+        }
+    }
+
+    @Override
+    /**
+     * Function executed when selected movie details are fetched
+     */
+    public void onDetailsFetchCompleted(MovieDetailsItem movieDetails){
+        if(movieDetails == null){
+            //Some error occurred
+            //TODO
+
+        }
+
+        mSelectedMovie = movieDetails;
+
+        if(!dualPane){
+            Intent detailsIntent = new Intent(MainActivity.this, DetailsActivity.class);
+            detailsIntent.putExtra(DetailsActivity.KEY_MOVIE_DETAILS, movieDetails);
+            startActivity(detailsIntent);
+        }else{
+            detailsFragment.updateMovieDetails(movieDetails);
+            detailsFragment.clearBackstack();
+        }
+
+        mDialog.dismiss();
     }
 
     @Override

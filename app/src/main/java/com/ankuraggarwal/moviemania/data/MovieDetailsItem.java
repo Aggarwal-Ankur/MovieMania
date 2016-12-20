@@ -72,6 +72,7 @@ public class MovieDetailsItem implements Parcelable{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(id);
         dest.writeString(title);
         dest.writeString(releaseDate);
         dest.writeString(overview);
@@ -79,7 +80,12 @@ public class MovieDetailsItem implements Parcelable{
         dest.writeString(posterPath);
     }
 
+    public MovieDetailsItem(){
+        //Required empty constructor
+    }
+
     public MovieDetailsItem(Parcel inParcel){
+        id = inParcel.readString();
         title = inParcel.readString();
         releaseDate = inParcel.readString();
         overview = inParcel.readString();
@@ -101,5 +107,9 @@ public class MovieDetailsItem implements Parcelable{
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 }
