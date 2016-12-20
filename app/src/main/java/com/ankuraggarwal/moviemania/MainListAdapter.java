@@ -2,19 +2,26 @@ package com.ankuraggarwal.moviemania;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
 /**
  * Created by Ankur on 6/16/2016.
  */
-public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
+public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.MovieViewHolder>{
     public interface ListItemClickCallback{
         void onListItemClicked(String movieId);
     }
@@ -45,14 +52,9 @@ public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
         holder.mMovieTitle.setText(currentItem.getMovieTitle());
         Picasso.with(context).load(IMAGE_FETCH_BASE_URL+ currentItem.getPosterPath()).into(holder.mMovieImg);
 
-        holder.mMovieImg.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                String movieId = currentItem.getId();
+        holder.mMovieImg.setTag(currentItem.getId());
 
-                mListItemClickCallback.onListItemClicked(movieId);
-            }
-        });
+        holder.mMovieContainer.setTag(currentItem.getId());
     }
 
     @Override
@@ -61,6 +63,23 @@ public class MainListAdapter extends RecyclerView.Adapter<MovieViewHolder>{
             return 0;
         }
         return mItemList.size();
+    }
+
+    class MovieViewHolder extends RecyclerView.ViewHolder{
+
+        @BindView(R.id.movie_title) public TextView mMovieTitle;
+        @BindView(R.id.movie_img) public ImageView mMovieImg;
+        @BindView(R.id.movie_container) public View mMovieContainer;
+
+        public MovieViewHolder(View itemView) {
+            super(itemView);
+            ButterKnife.bind(this, itemView);
+        }
+
+        @OnClick(R.id.movie_container)
+        public void clickMovie(View v){
+            mListItemClickCallback.onListItemClicked((String)v.getTag());
+        }
     }
 
 
