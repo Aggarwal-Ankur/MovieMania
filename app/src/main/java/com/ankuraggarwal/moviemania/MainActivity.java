@@ -23,6 +23,7 @@ import com.ankuraggarwal.moviemania.data.MovieResults;
 import com.ankuraggarwal.moviemania.fragments.DetailsFragment;
 import com.ankuraggarwal.moviemania.fragments.MainFragment;
 import com.ankuraggarwal.moviemania.fragments.MovieFetchFragment;
+import com.ankuraggarwal.moviemania.modules.ContextModule;
 import com.google.gson.Gson;
 
 import java.net.InetAddress;
@@ -77,6 +78,11 @@ public class MainActivity extends AppCompatActivity implements MovieFetchFragmen
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+
+
+
+
 
         //Check if the layout is dual pane or single pane
         detailsFragment = (DetailsFragment) getSupportFragmentManager().findFragmentById(R.id.detail_fragment);

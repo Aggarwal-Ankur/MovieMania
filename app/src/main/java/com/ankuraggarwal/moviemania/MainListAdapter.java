@@ -14,6 +14,8 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import javax.inject.Inject;
+
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -32,10 +34,13 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.MovieV
 
     private static final String IMAGE_FETCH_BASE_URL = "http://image.tmdb.org/t/p/w500";
 
-    public MainListAdapter(Context context, List<MovieDataItem> itemList, ListItemClickCallback listItemClickCallback) {
+    Picasso picasso;
+
+    public MainListAdapter(Context context, List<MovieDataItem> itemList, ListItemClickCallback listItemClickCallback, Picasso picasso) {
         this.mItemList = itemList;
         this.context = context;
         this.mListItemClickCallback = listItemClickCallback;
+        this.picasso = picasso;
     }
 
     @Override
@@ -50,7 +55,7 @@ public class MainListAdapter extends RecyclerView.Adapter<MainListAdapter.MovieV
         final MovieDataItem currentItem = mItemList.get(position);
 
         holder.mMovieTitle.setText(currentItem.getMovieTitle());
-        Picasso.with(context).load(IMAGE_FETCH_BASE_URL+ currentItem.getPosterPath()).into(holder.mMovieImg);
+        picasso.load(IMAGE_FETCH_BASE_URL+ currentItem.getPosterPath()).into(holder.mMovieImg);
 
         holder.mMovieImg.setTag(currentItem.getId());
 

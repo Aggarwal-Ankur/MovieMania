@@ -10,14 +10,20 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.ankuraggarwal.moviemania.DaggerMovieManiaApplicationComponent;
 import com.ankuraggarwal.moviemania.MainActivity;
 import com.ankuraggarwal.moviemania.MainListAdapter;
+import com.ankuraggarwal.moviemania.MovieManiaApplicationComponent;
 import com.ankuraggarwal.moviemania.MovieRecyclerItemDecoration;
 import com.ankuraggarwal.moviemania.R;
 import com.ankuraggarwal.moviemania.data.MovieDataItem;
+import com.ankuraggarwal.moviemania.modules.ContextModule;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -33,6 +39,8 @@ public class MainFragment extends Fragment implements MainListAdapter.ListItemCl
     private MainListAdapter mlAdapter;
     private List<MovieDataItem> mDataItems;
 
+    Picasso picasso;
+
     public MainFragment() {
         // Required empty public constructor
     }
@@ -43,6 +51,14 @@ public class MainFragment extends Fragment implements MainListAdapter.ListItemCl
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mDataItems = new ArrayList<>();
+
+        MovieManiaApplicationComponent component = DaggerMovieManiaApplicationComponent.builder()
+                .contextModule(new ContextModule(this.getActivity().getApplicationContext()))
+                .build();
+
+        component.inject(this.getActivity());
+
+        picasso = component.providePicasso();
     }
 
     @Override
@@ -57,7 +73,7 @@ public class MainFragment extends Fragment implements MainListAdapter.ListItemCl
         MovieRecyclerItemDecoration itemDecoration = new MovieRecyclerItemDecoration(getActivity(), R.dimen.item_offset);
         rView.addItemDecoration(itemDecoration);
 
-        mlAdapter = new MainListAdapter(getActivity(), mDataItems, this);
+        mlAdapter = new MainListAdapter(getActivity(), mDataItems, this, picasso);
         rView.setAdapter(mlAdapter);
 
         return rootView;

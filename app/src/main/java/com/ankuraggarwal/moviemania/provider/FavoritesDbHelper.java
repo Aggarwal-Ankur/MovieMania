@@ -4,6 +4,8 @@ import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import javax.inject.Inject;
+
 /**
  * Created by Ankur on 19-Jul-16.
  */
@@ -15,6 +17,7 @@ public class FavoritesDbHelper extends SQLiteOpenHelper {
     static final String DB_NAME = "favorites.db";
 
 
+    @Inject
     public FavoritesDbHelper(Context context) {
         super(context, DB_NAME, null, VERSION);
     }
